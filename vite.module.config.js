@@ -19,18 +19,20 @@
 // OUTPUT:
 //   dist-modules/<moduleId>/
 //     ├── manifest.js        (ES module bundle)
-//     └── constants.json     (copied for metadata discovery)
 // ============================================================================
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const moduleId = process.env.MODULE_ID;
 if (!moduleId) {
   throw new Error('MODULE_ID environment variable is required. Usage: MODULE_ID=auth vite build -c vite.module.config.js');
 }
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1');
+// Fix Windows path handling for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],

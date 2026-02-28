@@ -54,6 +54,7 @@ import databaseRoutes from './core/routes/databaseRoutes.js';
 import moduleRoutes from './core/routes/moduleRoutes.js';
 import moduleBundleRoutes from './core/routes/moduleBundleRoutes.js';
 import configRoutes from './core/routes/configRoutes.js';
+import debugRoutes from './core/routes/debugRoutes.js';
 
 // Swagger spec
 const swaggerSpec = loadJson('swagger.json');
@@ -109,6 +110,9 @@ export default function createApp() {
   // inside their own routers (setup/status routes are public for bootstrapping).
   app.use(`${prefix}/database`, databaseRoutes);
   app.use(`${prefix}/config`, configRoutes);
+
+  // Debug routes (temporary - remove in production!)
+  app.use(`${prefix}/debug`, debugRoutes);
 
   // ── 404 Handler ───────────────────────────────────────────────────────
   app.use((req, res) => {

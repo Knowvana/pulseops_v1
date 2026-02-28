@@ -22,7 +22,9 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1');
+// Fix Windows path handling for ES modules
+const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
 const MODULES_DIR = path.join(ROOT, 'src', 'modules');
 const OUTPUT_DIR = path.join(ROOT, 'dist-modules');
@@ -46,9 +48,20 @@ function getNonCoreModules() {
 
 // Build a single module
 function buildModule(moduleId) {
+  console.log(`🔍 Looking for module: ${moduleId}`);
+  console.log(`   ROOT: ${ROOT}`);
+  console.log(`   MODULES_DIR: ${MODULES_DIR}`);
+  console.log(`   OUTPUT_DIR: ${OUTPUT_DIR}`);
+  
   const modulePath = path.join(MODULES_DIR, moduleId);
-  if (!fs.existsSync(path.join(modulePath, 'manifest.jsx'))) {
+  const manifestPath = path.join(modulePath, 'manifest.jsx');
+  
+  console.log(`   Checking path: ${modulePath}`);
+  console.log(`   Manifest exists: ${fs.existsSync(manifestPath)}`);
+  
+  if (!fs.existsSync(manifestPath)) {
     console.error(`Module '${moduleId}' not found at ${modulePath}`);
+    console.error(`Expected manifest at: ${manifestPath}`);
     process.exit(1);
   }
 

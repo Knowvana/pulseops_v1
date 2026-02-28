@@ -1,0 +1,17 @@
+{
+  "moduleId": "demo",
+  "moduleName": "Demo Test",
+  "moduleShortName": "Demo",
+  "moduleVersion": "1.0.0",
+  "moduleDescription": "Test module to validate the plug-and-play module pattern — serves as a reference implementation",
+  "roles": ["super_admin", "admin", "manager", "user"],
+  "isCore": false,
+  "order": 10,
+  "defaultView": "dashboard",
+  "demoItems": [
+    { "id": "item_1", "label": "Sample Item 1", "status": "active" },
+    { "id": "item_2", "label": "Sample Item 2", "status": "inactive" },
+    { "id": "item_3", "label": "Sample Item 3", "status": "active" }
+  ],
+  "maxDemoItems": 100
+}

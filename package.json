@@ -9,7 +9,7 @@
     "dev:ui": "vite",
     "dev:api": "cd api && npm run dev",
     "build": "vite build",
-    "build:module": "node scripts/build-module.js",
+    "build:module": "node scripts/build-module-windows.js",
     "build:modules": "node scripts/build-module.js --all",
     "preview": "vite preview",
     "lint": "eslint src/ --ext .js,.jsx"

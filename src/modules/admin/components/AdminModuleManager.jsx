@@ -57,7 +57,11 @@ export default function AdminModuleManager({ onModulesChanged }) {
       ]);
       ApiClient.suppressSessionExpired(false);
       setDbModules(installed);
-      setAvailableModules(available);
+      
+      // Filter out already installed modules from available list
+      const installedIds = new Set(installed.map(m => m.moduleId));
+      const notYetInstalled = available.filter(mod => !installedIds.has(mod.moduleId || mod.id));
+      setAvailableModules(notYetInstalled);
     } catch (err) {
       ApiClient.suppressSessionExpired(false);
       Logger.warn('AdminModuleManager', logMsgs.moduleManagerOpened, { error: err.message });
@@ -68,15 +72,34 @@ export default function AdminModuleManager({ onModulesChanged }) {
 
   useEffect(() => { fetchModules(); }, [fetchModules]);
 
-  // ── Merge DB modules with static manifests for display ────────────────────
-  const installedModules = getAllManifests().map(manifest => {
-    const dbEntry = dbModules.find(m => m.moduleId === manifest.id);
+  // ── Show all modules from database + merge with manifests ───────────────────
+  const installedModules = dbModules.map(dbEntry => {
+    // Find matching manifest (might be loaded or not)
+    const manifest = getAllManifests().find(m => m.id === dbEntry.moduleId);
+    
     return {
-      ...manifest,
-      dbEnabled: dbEntry?.enabled ?? manifest.enabled,
-      dbInstalled: !!dbEntry,
-      schemaReady: dbEntry?.schemaInitialized ?? false,
-      dbOrder: dbEntry?.order ?? manifest.order,
+      // Use manifest data if available, otherwise use database data
+      id: dbEntry.moduleId,
+      name: dbEntry.name,
+      shortName: manifest?.shortName || dbEntry.name,
+      description: dbEntry.description,
+      version: dbEntry.version,
+      icon: manifest?.icon || 'Package',
+      roles: manifest?.roles || [],
+      isCore: dbEntry.isCore,
+      
+      // Database state
+      dbEnabled: dbEntry.enabled,
+      dbInstalled: true,
+      schemaReady: dbEntry.schemaInitialized,
+      dbOrder: dbEntry.order,
+      
+      // Manifest data (if loaded)
+      defaultView: manifest?.defaultView,
+      navItems: manifest?.navItems || [],
+      getViews: manifest?.getViews,
+      getConfigTabs: manifest?.getConfigTabs,
+      getSettingsTabs: manifest?.getSettingsTabs,
     };
   }).sort((a, b) => (a.dbOrder || 99) - (b.dbOrder || 99));
 
@@ -88,10 +111,14 @@ export default function AdminModuleManager({ onModulesChanged }) {
         case 'install':
           await ModuleService.install(moduleId);
           Logger.info('AdminModuleManager', logMsgs.moduleInstalled, { moduleId });
+          // Refresh modules to update both installed and available lists
+          await fetchModules();
           break;
         case 'enable':
           await ModuleService.enable(moduleId);
           Logger.info('AdminModuleManager', logMsgs.moduleEnabled, { moduleId });
+          // Refresh modules to reload the registry
+          await fetchModules();
           break;
         case 'disable':
           await ModuleService.disable(moduleId);
@@ -100,6 +127,8 @@ export default function AdminModuleManager({ onModulesChanged }) {
         case 'remove':
           await ModuleService.remove(moduleId);
           Logger.info('AdminModuleManager', logMsgs.moduleRemoved, { moduleId });
+          // Refresh modules to update both installed and available lists
+          await fetchModules();
           break;
         case 'initialize':
           await ModuleService.initializeSchema(moduleId);
@@ -107,7 +136,6 @@ export default function AdminModuleManager({ onModulesChanged }) {
         default:
           break;
       }
-      await fetchModules();
       onModulesChanged?.();
     } catch (err) {
       Logger.error('AdminModuleManager', `Module ${action} failed`, { moduleId, error: err.message });
