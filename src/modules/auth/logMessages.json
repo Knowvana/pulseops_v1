@@ -1,6 +1,9 @@
 {
   "dashboardLoaded": "Auth dashboard loaded",
   "dashboardRefreshed": "Auth dashboard data refreshed",
+  "providerLoaded": "Auth provider configuration loaded",
+  "providerSaved": "Auth provider changed successfully",
+  "providerLoadFailed": "Failed to load auth provider configuration",
   "userCreated": "User created via auth module",
   "userUpdated": "User updated via auth module",
   "userDeleted": "User deleted via auth module",

@@ -16,11 +16,12 @@
 //
 // CONTRACT: See admin/manifest.jsx header for full contract specification.
 //
-// ADD-ON MODULE: Not core. Installed via Module Manager. Loaded dynamically
-// via import() when enabled. Core system uses CoreAuthService for bootstrap.
+// CORE MODULE: Always present, cannot be paused or removed.
+// Statically imported in moduleRegistry.js. Governs all authentication
+// for both UI and API via the active provider (json_file | database | social).
 //
 // USED BY:
-//   - src/modules/moduleRegistry.js → dynamically imported when enabled
+//   - src/modules/moduleRegistry.js → STATIC_MANIFESTS (always loaded)
 //   - src/core/PlatformDashboard.jsx → rendered when module is active
 // ============================================================================
 import React from 'react';

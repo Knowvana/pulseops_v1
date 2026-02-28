@@ -22,13 +22,15 @@ import React, { useState } from 'react';
 import { LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
 import uiText from '@shared/config/uiText.json';
 import appConfig from '@shared/config/app.json';
+import constants from '@shared/config/constants.json';
 
 const txt = uiText.login;
 
 export default function LoginForm({ onLogin, isLoading = false, error: externalError }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const defaultAdmin = constants.coreAuth?.defaultAdmin || {};
+  const [email, setEmail] = useState(defaultAdmin.email || '');
+  const [password, setPassword] = useState(defaultAdmin.password || '');
+  const [showPassword, setShowPassword] = useState(true);
   const [error, setError] = useState('');
 
   const displayError = externalError || error;

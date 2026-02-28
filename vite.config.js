@@ -37,6 +37,12 @@ export default defineConfig({
       '/api': {
         target: process.env.VITE_API_SERVER_URL || urls.APIServerURL || 'http://localhost:4001',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: { message: 'API server unavailable', code: 'SERVICE_UNAVAILABLE' } }));
+          });
+        },
       },
     },
   },

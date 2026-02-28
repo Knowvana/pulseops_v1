@@ -53,7 +53,7 @@ export const generalRateLimiter = rateLimit({
 // ── Rate Limiting: Auth Endpoints (stricter) ─────────────────────────────────
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

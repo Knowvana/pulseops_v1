@@ -14,5 +14,7 @@
   "dbConfigSaved": "Database configuration saved",
   "dbSchemaInitialized": "Database schema initialized from admin",
   "dbDataLoaded": "Default data loaded from admin",
-  "dbWiped": "Database wiped from admin"
+  "dbWiped": "Database wiped from admin",
+  "dbCreated": "Database created from admin",
+  "dbDeleted": "Database deleted from admin"
 }

@@ -34,15 +34,16 @@ import logMessages from '@shared/config/logMessages.json';
 
 const MODULE_URL = urls.modulesEndpoint;
 
-// ── Dev-only bundled module constants (offline discovery fallback) ─────────
+// ── Core bundled module constants (always available) ──────────────────────
+// Only Admin and Auth are bundled as core modules.
+// All other modules (logging, api_manager, demo, etc.) are separate
+// plug-and-play dynamic modules loaded from the API or hot-drop folder.
 // Used by scanBundledModules() ONLY when the API is unreachable.
 // In production with hot-drop, the API /modules/available endpoint is the
 // single source of truth — it scans dist-modules/ on the server.
 const DEV_BUNDLED_CONSTANTS = {
-  logging: () => import('@modules/logging/constants.json'),
   auth: () => import('@modules/auth/constants.json'),
-  api_manager: () => import('@modules/api_manager/constants.json'),
-  demo: () => import('@modules/demo/constants.json'),
+  platform_admin: () => import('@modules/admin/constants.json'),
 };
 
 const ModuleService = {

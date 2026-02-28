@@ -2,6 +2,7 @@
   "success": {
     "dbConnected": "Database connection successful.",
     "dbCreated": "Database created successfully.",
+    "dbDeleted": "Database deleted successfully.",
     "schemaCreated": "Database schema created successfully.",
     "defaultDataLoaded": "Default data loaded successfully.",
     "defaultDataCleaned": "Default data cleaned successfully.",
@@ -14,11 +15,14 @@
     "schemaInitialized": "Module schema initialized successfully.",
     "authLoginSuccess": "User authenticated successfully.",
     "authLogoutSuccess": "User logged out successfully.",
-    "authTokenRefreshed": "Access token refreshed successfully."
+    "authTokenRefreshed": "Access token refreshed successfully.",
+    "authProviderSaved": "Authentication provider saved successfully.",
+    "authProviderLoaded": "Authentication provider configuration loaded."
   },
   "errors": {
     "dbConnectionFailed": "Database connection failed. Check your connection settings.",
     "dbCreateFailed": "Failed to create database.",
+    "dbDeleteFailed": "Failed to delete database.",
     "schemaInitFailed": "Schema initialization failed.",
     "dbInitFailed": "Database initialization failed. Check server logs.",
     "dbWipeFailed": "Database wipe failed. Check server logs.",
@@ -40,6 +44,9 @@
     "authRefreshInvalid": "Invalid or expired refresh token.",
     "authUserNotFound": "User not found.",
     "authForbidden": "Insufficient permissions for this action.",
+    "authProviderInvalid": "Invalid authentication provider specified.",
+    "authProviderDbNotReady": "Cannot switch to database authentication — database is not initialized. Set up the database first.",
+    "authProviderSaveFailed": "Failed to save authentication provider configuration.",
     "rateLimitExceeded": "Too many requests. Please try again later.",
     "authRateLimitExceeded": "Too many login attempts. Please try again later."
   },

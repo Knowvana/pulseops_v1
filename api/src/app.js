@@ -48,6 +48,8 @@ import { authenticate } from './core/middleware/auth.js';
 // Routes
 import healthRoutes from './core/routes/healthRoutes.js';
 import authRoutes from './core/routes/authRoutes.js';
+import logsRoutes from './core/routes/logsRoutes.js';
+import usersRoutes from './core/routes/usersRoutes.js';
 import databaseRoutes from './core/routes/databaseRoutes.js';
 import moduleRoutes from './core/routes/moduleRoutes.js';
 import moduleBundleRoutes from './core/routes/moduleBundleRoutes.js';
@@ -94,10 +96,19 @@ export default function createApp() {
   app.use(`${prefix}/modules/bundle`, moduleBundleRoutes);
 
   // ── JWT Authentication Gate ────────────────────────────────────────────
-  // All routes below this point require a valid JWT token.
+  // Logs sync requires auth (frontend suppresses session-expired during sync)
+  app.use(`${prefix}/logs`, authenticate, logsRoutes);
+
+  // Users endpoints require auth
+  app.use(`${prefix}/users`, authenticate, usersRoutes);
+
+  // Module management (install/enable/disable) always requires auth.
   app.use(`${prefix}/modules`, authenticate, moduleRoutes);
-  app.use(`${prefix}/database`, authenticate, databaseRoutes);
-  app.use(`${prefix}/config`, authenticate, configRoutes);
+
+  // Database + Config routes apply authenticate selectively per-route
+  // inside their own routers (setup/status routes are public for bootstrapping).
+  app.use(`${prefix}/database`, databaseRoutes);
+  app.use(`${prefix}/config`, configRoutes);
 
   // ── 404 Handler ───────────────────────────────────────────────────────
   app.use((req, res) => {

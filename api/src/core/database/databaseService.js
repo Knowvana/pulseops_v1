@@ -29,6 +29,9 @@ function getPool() {
       idleTimeoutMillis: config.database.idleTimeoutMillis,
       connectionTimeoutMillis: config.database.connectionTimeoutMillis,
     });
+    pool.on('error', (err) => {
+      logger.error('Database pool error (idle client)', { error: err.message });
+    });
   }
   return pool;
 }
@@ -61,6 +64,45 @@ const DatabaseService = {
         return { created: true, database: dbName };
       }
       return { created: false, database: dbName, message: 'Database already exists.' };
+    } finally {
+      client.release();
+      await adminPool.end();
+    }
+  },
+
+  /**
+   * Drop (delete) the target database entirely.
+   * Terminates all active connections first so the DROP succeeds.
+   * Connects to the default 'postgres' database to run DROP DATABASE.
+   */
+  async dropDatabase() {
+    const adminPool = new Pool({
+      host: config.database.host,
+      port: config.database.port,
+      database: 'postgres',
+      user: config.database.user,
+      password: config.database.password,
+      ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
+    });
+    const client = await adminPool.connect();
+    try {
+      const dbName = config.database.database;
+      const check = await client.query(
+        `SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]
+      );
+      if (check.rows.length === 0) {
+        return { deleted: false, database: dbName, message: 'Database does not exist.' };
+      }
+      // Terminate all active connections to the target DB before dropping
+      await client.query(
+        `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`,
+        [dbName]
+      );
+      await client.query(`DROP DATABASE "${dbName}"`);
+      // Reset the shared pool so it reconnects if DB is recreated
+      if (pool) { await pool.end().catch(() => {}); pool = null; }
+      logger.info(messages.success.dbDeleted || `Database '${dbName}' dropped.`);
+      return { deleted: true, database: dbName };
     } finally {
       client.release();
       await adminPool.end();

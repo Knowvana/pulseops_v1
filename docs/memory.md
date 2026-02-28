@@ -1,7 +1,7 @@
 # PulseOps V1 — Development Memory
 
 > **Auto-updated by Cascade after each work session.**
-> Last updated: 2026-02-28
+> Last updated: 2026-03-01
 
 ---
 
@@ -26,12 +26,12 @@ PulseOps V1 is an enterprise modular operations platform with a plug-and-play mo
 ### Module Types
 | Type | Example | Bundled? | Loaded How | Can Remove? |
 |------|---------|----------|------------|-------------|
-| **Core** | Admin (`platform_admin`) | Yes, statically imported | `import` at build time | No |
-| **Add-on** | Logging, Auth, API Manager, Demo | No | Dynamic `import()` from URL at runtime | Yes |
+| **Core** | Admin (`platform_admin`), Auth (`auth`) | Yes, statically imported | `import` at build time | No |
+| **Add-on** | Logging, API Manager, Demo | No | Dynamic `import()` from URL at runtime | Yes |
 
 ### Core vs Add-on Rules
-- `src/shared/config/constants.json` → `coreModuleIds: ["platform_admin"]`
-- Only Admin is core. Everything else is add-on.
+- `src/shared/config/constants.json` → `coreModuleIds: ["platform_admin", "auth"]`
+- Admin and Auth are core. Everything else is add-on.
 - Core modules are in `STATIC_MANIFESTS` in `moduleRegistry.js`
 - Add-on modules are loaded via `MODULE_IMPORT_MAP` or from hot-drop URLs
 
@@ -141,10 +141,18 @@ dist-modules/
 |-------|--------|
 | `GET /api/health` | Health check |
 | `GET /api/health/readiness` | K8s readiness (checks DB) |
-| `POST /api/auth/login` | Login → JWT tokens |
-| `GET /api-docs` | Swagger API Explorer |
+| `POST /api/auth/login` | Login → JWT tokens (provider-routed) |
+| `GET /api/auth/config` | Get current auth provider config |
+| `GET /swagger-ui` | Swagger API Explorer |
+| `GET /api-docs/swagger.json` | OpenAPI JSON spec |
 | `GET /api/modules/bundle/:id/manifest.js` | **Serve built manifest (hot-drop)** |
 | `GET /api/modules/bundle/:id/:file` | Serve module assets |
+| `POST /api/database/create-database` | Bootstrap: create DB (no user yet) |
+| `GET /api/database/test-connection` | DB config check on page load |
+| `GET /api/database/schema-status` | DB Objects tab status check |
+| `POST /api/database/create-schema` | Bootstrap: create schema + tables |
+| `POST /api/database/load-default-data` | Bootstrap: seed admin + core module |
+| `DELETE /api/database/load-default-data` | Clean default data |
 
 ### Routes — Protected (JWT required)
 | Route | Purpose |
@@ -152,12 +160,10 @@ dist-modules/
 | `POST /api/auth/refresh` | Refresh access token |
 | `POST /api/auth/logout` | Logout |
 | `GET /api/auth/me` | Current user profile |
-| `POST /api/database/create-database` | Create DB if not exists |
-| `GET /api/database/test-connection` | Test DB connection |
-| `GET /api/database/schema-status` | Check schema state |
-| `POST /api/database/create-schema` | Create schema + tables |
-| `POST /api/database/load-default-data` | Seed admin user + core module |
-| `POST /api/database/wipe` | Drop entire schema |
+| `POST /api/auth/config` | Save auth provider (super_admin only) |
+| `DELETE /api/database/delete-database` | **Drop entire database** |
+| `POST /api/database/wipe` | Drop all tables (keep DB) |
+| `GET /api/database/stats` | Table sizes and counts |
 | `GET /api/modules` | List installed modules from DB |
 | `GET /api/modules/available` | Scan hot-drop folder |
 | `POST /api/modules/:id/install` | Install module to DB |
@@ -198,7 +204,9 @@ dist-modules/
 `TopNav`, `SideNav`, `RightPanel`, `AppShell`
 
 ### Services
-`Logger`, `ApiClient`, `CoreAuthService`, `AuthService`, `ModuleService`
+`Logger`, `ApiClient`, `CoreAuthService`, `ModuleService`
+
+> **Note:** `AuthService` is deprecated — `CoreAuthService` is the single unified auth service.
 
 ### Admin Module Settings Tabs
 - **Database Configuration**: Connection form, test connection, save config, SSL toggle, status tile
@@ -236,6 +244,53 @@ dist-modules/
 | T17 | Split moduleBundleRoutes.js (public) from moduleRoutes.js (protected) | DONE |
 | T18 | POST /api/database/create-database route (app creates its own DB) | DONE |
 | T19 | docs/quick_start.md with URLs, credentials, commands, Auth module plan | DONE |
+| T20 | DELETE /database/delete-database + dropDatabase() in databaseService.js | DONE |
+| T21 | Create Database + Delete Database UI in DatabaseObjectsTab | DONE |
+| T22 | Fix auth gate: setup routes public, only wipe/delete/stats protected | DONE |
+| T23 | docs/authentication.md — full security/auth doc + architect verdict (7.5/10) | DONE |
+| T24 | Fix pg.Pool unhandled error event — add pool.on('error') in databaseService.js | DONE |
+| T25 | Fix Vite proxy crash when API is down — add configure error handler in vite.config.js | DONE |
+| T26 | Fix core admin 401 loop — suppress session-expired events when user.isCoreAdmin is true | DONE |
+| T27 | Comprehensive database setup UI improvements — pink warnings, dynamic button states, clear messaging | DONE |
+| T28 | Fix test-connection 500 error — backend returns 200 with error code, frontend shows pink gradient warning | DONE |
+| T29 | Login form prepopulates default admin email/password and shows password by default | DONE |
+| T30 | Auth Module refactored as CORE: JSON file auth by default, DB auth switchable via UI | DONE |
+
+---
+
+## 6b. Auth Module Architecture (T30)
+
+### Auth Provider System
+The Auth Module governs all authentication for both UI and API. The active provider is stored in `api/src/config/auth-provider.json` (always readable, no DB required) and mirrored to `system_config` table when DB is available.
+
+| Provider | Storage | Requires DB? | Switch From UI? |
+|----------|---------|-------------|----------------|
+| `json_file` | `api/src/config/users.json` | No | N/A (default) |
+| `database` | `pulseops.system_users` table | Yes (initialized) | Yes |
+| `social` | OAuth2 config | Yes | Coming soon |
+
+### Auth Flow
+1. **Login**: `CoreAuthService.login()` calls `POST /api/auth/login` → API reads provider → validates against `users.json` or DB
+2. **Token**: API returns `{ accessToken, refreshToken, user }` → stored in localStorage + set on `ApiClient` as Bearer
+3. **Session restore**: On reload, `CoreAuthService.getCurrentUser()` reads localStorage → restores token to ApiClient (no API call)
+4. **401 handling**: `ApiClient` dispatches `auth:session-expired` → `App.jsx` clears session + token
+5. **Logout**: `CoreAuthService.logout()` → clears localStorage + `ApiClient.clearToken()` + `POST /api/auth/logout`
+
+### Auth Provider Config API
+- `GET /api/auth/config` — public, returns `{ provider, availableProviders }`
+- `POST /api/auth/config` — protected (super_admin JWT), validates DB readiness if switching to `database`
+
+### Key New/Changed Files (T30)
+| File | Change |
+|------|--------|
+| `api/src/config/users.json` | NEW — default users for json_file auth |
+| `api/src/config/auth-provider.json` | NEW — stores active provider |
+| `api/src/core/routes/authRoutes.js` | Refactored — provider-based login + config endpoints |
+| `src/modules/auth/constants.json` | `isCore: true` |
+| `src/modules/moduleRegistry.js` | Auth in STATIC_MANIFESTS |
+| `src/shared/services/apiClient.js` | Bearer token support (`setToken`/`clearToken`) |
+| `src/shared/services/coreAuthService.js` | Rewritten — API-only, token-based |
+| `src/modules/auth/components/AuthConfig.jsx` | AuthProviderTab fully functional |
 
 ---
 

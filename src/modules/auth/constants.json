@@ -5,7 +5,7 @@
   "moduleVersion": "1.0.0",
   "moduleDescription": "Global authentication, authorization, user management, RBAC, session control, and security audit",
   "roles": ["super_admin", "admin"],
-  "isCore": false,
+  "isCore": true,
   "order": 1,
   "defaultView": "dashboard",
   "passwordPolicy": {

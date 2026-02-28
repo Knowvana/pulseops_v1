@@ -73,7 +73,7 @@ export default function AppShell({
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface-50 font-sans text-surface-800">
+    <div className="h-screen flex flex-col bg-surface-50 font-sans text-surface-800 overflow-hidden">
       {/* Top Navigation */}
       <TopNav
         appName={appName}
@@ -89,7 +89,7 @@ export default function AppShell({
       />
 
       {/* Body: SideNav + Main Content + RightPanel */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {hasSideNav && (
           <SideNav
             title={sideNavTitle}
@@ -101,8 +101,8 @@ export default function AppShell({
           />
         )}
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="w-full px-6 py-6">
+        <main className="flex-1 overflow-hidden">
+          <div className="w-full h-full px-6 py-6 overflow-y-auto">
             {children}
           </div>
         </main>

@@ -7,7 +7,7 @@
 // getConfigTabs(). All text from uiText.json.
 //
 // ARCHITECTURE: Stateful form components that read/save config via ApiClient.
-// Each component manages its own state and save operation independently.
+// AuthProviderTab loads the current provider from the API and allows switching.
 //
 // USED BY: auth/manifest.jsx → getConfigTabs()
 //
@@ -16,15 +16,20 @@
 //   - ../uiText.json       → All UI labels
 //   - ../constants.json     → Default policy values
 //   - ../logMessages.json   → Log message templates
+//   - @shared/config/urls.json → API endpoints
 // ============================================================================
-import React, { useState, useCallback } from 'react';
-import { Shield, Key, Check } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Shield, Database, Globe, Key, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Card, Button, Logger, ApiClient } from '@shared';
 import uiText from '@modules/auth/uiText.json';
 import defaults from '@modules/auth/constants.json';
 import logMsgs from '@modules/auth/logMessages.json';
+import urls from '@shared/config/urls.json';
 
 const cfgTxt = uiText.config;
+const prvTxt = cfgTxt.provider;
+
+const PROVIDER_ICONS = { json_file: Shield, database: Database, social: Globe };
 
 // ── Helper: Toggle switch row ───────────────────────────────────────────────
 function ToggleRow({ label, description, checked, onChange }) {
@@ -66,44 +71,176 @@ function NumberRow({ label, description, value, onChange, min = 1, max = 9999 })
 
 // ── Auth Provider Tab ───────────────────────────────────────────────────────
 export function AuthProviderTab() {
-  const [provider, setProvider] = useState('local');
+  const [currentProvider, setCurrentProvider] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [availableProviders, setAvailableProviders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [error, setError] = useState(null);
+
+  const loadProviderConfig = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await ApiClient.get(urls.authConfig);
+      if (response?.success && response?.data) {
+        setCurrentProvider(response.data.provider);
+        setSelectedProvider(response.data.provider);
+        setAvailableProviders(response.data.availableProviders || ['json_file', 'database', 'social']);
+        Logger.info('AuthConfig', logMsgs.providerLoaded);
+      } else {
+        setError(response?.error?.message || prvTxt.loadingMessage);
+      }
+    } catch (err) {
+      setError(err.message);
+      Logger.error('AuthConfig', logMsgs.providerLoadFailed, { error: err.message });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadProviderConfig(); }, [loadProviderConfig]);
+
+  const handleSave = useCallback(async () => {
+    if (!selectedProvider || selectedProvider === currentProvider) return;
+    setIsSaving(true);
+    setSaveStatus(null);
+    setError(null);
+    try {
+      const response = await ApiClient.post(urls.authConfig, { provider: selectedProvider });
+      if (response?.success) {
+        setCurrentProvider(selectedProvider);
+        setSaveStatus('success');
+        Logger.info('AuthConfig', logMsgs.providerSaved, { provider: selectedProvider });
+        setTimeout(() => setSaveStatus(null), 3000);
+      } else {
+        const msg = response?.error?.message || 'Failed to save provider.';
+        setError(msg);
+        setSelectedProvider(currentProvider);
+      }
+    } catch (err) {
+      setError(err.message);
+      setSelectedProvider(currentProvider);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [selectedProvider, currentProvider]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex items-center gap-2 text-sm text-surface-500 py-8 justify-center">
+          <RefreshCw size={14} className="animate-spin" />
+          <span>{prvTxt.loadingMessage}</span>
+        </div>
+      </Card>
+    );
+  }
+
+  const providerIds = availableProviders;
+  const hasChange = selectedProvider !== currentProvider;
 
   return (
-    <Card>
-      <h3 className="text-sm font-bold text-surface-800 mb-1">{cfgTxt.provider.title}</h3>
-      <p className="text-xs text-surface-500 mb-4">{cfgTxt.provider.description}</p>
-      <div className="space-y-3">
-        {[
-          { id: 'local', label: cfgTxt.provider.local, desc: cfgTxt.provider.localDescription },
-          { id: 'ldap', label: cfgTxt.provider.ldap, desc: cfgTxt.provider.ldapDescription },
-        ].map(p => (
-          <button
-            key={p.id}
-            onClick={() => setProvider(p.id)}
-            className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-              provider === p.id
-                ? 'border-brand-500 bg-brand-50/50'
-                : 'border-surface-200 hover:border-surface-300'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield size={18} className={provider === p.id ? 'text-brand-600' : 'text-surface-400'} />
-                <div>
-                  <p className="text-sm font-semibold text-surface-800">{p.label}</p>
-                  <p className="text-xs text-surface-500">{p.desc}</p>
+    <div className="space-y-4">
+      <Card>
+        <h3 className="text-sm font-bold text-surface-800 mb-1">{prvTxt.title}</h3>
+        <p className="text-xs text-surface-500 mb-4">{prvTxt.description}</p>
+
+        {error && (
+          <div className="flex items-start gap-2 p-3 mb-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {saveStatus === 'success' && (
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-green-50 border border-green-200 text-xs text-green-700">
+            <Check size={13} />
+            <span>{prvTxt.savedMessage}</span>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {providerIds.map(providerId => {
+            const provTxt = prvTxt.providers?.[providerId] || {};
+            const Icon = PROVIDER_ICONS[providerId] || Shield;
+            const isActive = providerId === currentProvider;
+            const isSelected = providerId === selectedProvider;
+            const isSocial = providerId === 'social';
+
+            return (
+              <button
+                key={providerId}
+                onClick={() => !isSocial && setSelectedProvider(providerId)}
+                disabled={isSocial}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  isSocial
+                    ? 'border-surface-100 bg-surface-50 cursor-not-allowed opacity-60'
+                    : isSelected
+                      ? 'border-brand-500 bg-brand-50/50'
+                      : 'border-surface-200 hover:border-surface-300 cursor-pointer'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <Icon
+                      size={18}
+                      className={`mt-0.5 shrink-0 ${isSelected && !isSocial ? 'text-brand-600' : 'text-surface-400'}`}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-surface-800">{provTxt.label || providerId}</p>
+                      <p className="text-xs text-surface-500 mt-0.5">{provTxt.description}</p>
+                      <p className="text-[11px] text-surface-400 mt-1">{provTxt.detail}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {isActive && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-brand-100 text-brand-700">
+                        {prvTxt.activeBadge}
+                      </span>
+                    )}
+                    {isSocial && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-surface-200 text-surface-500">
+                        {prvTxt.comingSoonBadge}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              {provider === p.id && (
-                <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-brand-100 text-brand-700">
-                  {cfgTxt.provider.currentBadge}
-                </span>
-              )}
+              </button>
+            );
+          })}
+        </div>
+
+        {hasChange && selectedProvider === 'database' && (
+          <div className="flex items-start gap-2 p-3 mt-4 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold">{prvTxt.dbNotReadyWarning}</p>
+              <p className="mt-0.5 text-amber-700">{prvTxt.dbRequiredNote}</p>
             </div>
-          </button>
-        ))}
-      </div>
-    </Card>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSave}
+            loading={isSaving}
+            disabled={!hasChange || isSaving}
+            icon={saveStatus === 'success' ? Check : undefined}
+          >
+            {isSaving ? prvTxt.savingMessage : prvTxt.switchButton}
+          </Button>
+          {hasChange && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedProvider(currentProvider)}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }
 

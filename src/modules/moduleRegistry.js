@@ -35,10 +35,12 @@
 // Only the essential platform module (Admin) is statically imported.
 // ALL other modules are loaded dynamically via import() at runtime.
 import adminManifest from '@modules/admin/manifest.jsx';
+import authManifest from '@modules/auth/manifest.jsx';
 import urls from '@shared/config/urls.json';
 
-// ─── Core manifest list (only admin at build time) ─────────────────────────
+// ─── Core manifest list (admin + auth are always bundled, cannot be removed) ─
 const STATIC_MANIFESTS = [
+  authManifest,
   adminManifest,
 ];
 
@@ -52,7 +54,6 @@ const MODULE_IMPORT_MAP = {};
 // ─── Dev-only fallback paths (bundled in source, used when no API) ────────────
 const DEV_FALLBACK_MAP = {
   logging: () => import('@modules/logging/manifest.jsx'),
-  auth: () => import('@modules/auth/manifest.jsx'),
   api_manager: () => import('@modules/api_manager/manifest.jsx'),
   demo: () => import('@modules/demo/manifest.jsx'),
 };

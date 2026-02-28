@@ -2,21 +2,19 @@
 // App — PulseOps V1 (Core Entry Point)
 //
 // PURPOSE: Root React component. Manages authentication state and routes
-// between the LoginForm and PlatformDashboard. Uses CoreAuthService for
-// built-in admin login that works WITHOUT a backend API or database.
+// between the LoginForm and PlatformDashboard. Uses CoreAuthService which
+// delegates all auth to the API (provider-agnostic).
 //
 // ARCHITECTURE:
-//   1. On mount, checks for existing session via CoreAuthService.getCurrentUser()
-//      - First tries backend HttpOnly cookie session (if backend is up)
-//      - Falls back to localStorage core admin session (offline mode)
+//   1. On mount, restores session from localStorage via CoreAuthService.getCurrentUser()
+//      - Reattaches JWT Bearer token to ApiClient (no API call needed)
 //   2. If authenticated → renders PlatformDashboard
 //   3. If not → renders LoginForm
 //   4. Listens for 'auth:session-expired' events from ApiClient
 //
-// CORE ADMIN LOGIN (works without backend):
-//   Default credentials: admin@pulseops.local / PulseOps@2024
-//   Can be changed via Core Settings once logged in.
-//   When Auth module is installed, it provides full user management.
+// AUTH PROVIDERS (configured in Auth Module → Config):
+//   - JSON File (default): works without a database
+//   - Database: switch to this once DB is initialized
 //
 // USAGE: Rendered by main.jsx as the root component.
 //
@@ -65,6 +63,7 @@ export default function App() {
       setUser(null);
       Logger.setUser(null);
       ApiClient.setUser(null);
+      ApiClient.clearToken();
       Logger.warn('App', logMessages.coreAuth.sessionExpired);
     };
     window.addEventListener(constants.coreAuth.sessionExpiredEvent, handleSessionExpired);
@@ -72,7 +71,7 @@ export default function App() {
   }, []);
 
   // ── Login handler ─────────────────────────────────────────────────────────
-  // CoreAuthService.login() tries backend first, falls back to core admin creds
+  // CoreAuthService.login() calls the API — provider determined by Auth Module config
   const handleLogin = useCallback(async (email, password) => {
     setIsLoggingIn(true);
     try {
@@ -94,6 +93,7 @@ export default function App() {
     setUser(null);
     Logger.setUser(null);
     ApiClient.setUser(null);
+    ApiClient.clearToken();
     Logger.info('App', logMessages.coreAuth.logoutSuccess);
   }, []);
 

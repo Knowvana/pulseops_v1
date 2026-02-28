@@ -28,7 +28,7 @@
       "error": "error"
     },
     "mandatoryNavItems": ["dashboard", "config"],
-    "coreModuleIds": ["platform_admin"]
+    "coreModuleIds": ["platform_admin", "auth"]
   },
   "logging": {
     "levels": ["debug", "info", "warn", "error"],

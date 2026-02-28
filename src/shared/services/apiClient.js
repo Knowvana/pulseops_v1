@@ -36,25 +36,31 @@ class ApiClientService {
     this._logger = null;
     // Current user reference for log context
     this._user = null;
+    // JWT access token — attached as Bearer to all requests
+    this._accessToken = null;
     // When true, 401 responses will NOT dispatch session-expired event.
-    // Used by CoreAuthService._tryBackendSession() to probe without side effects.
     this._suppressSessionExpired = false;
   }
 
-  // ── Logger injection (avoids circular import) ─────────────────────────────
+  // ── Logger injection (avoids circular import) ─────────────────────
   setLogger(logger) { this._logger = logger; }
   setUser(user) { this._user = user; }
+  setToken(token) { this._accessToken = token || null; }
+  clearToken() { this._accessToken = null; }
   suppressSessionExpired(flag) { this._suppressSessionExpired = !!flag; }
 
   // ── URL helpers ───────────────────────────────────────────────────────────
   getBaseUrl() { return this._baseUrl; }
   setBaseUrl(url) { this._baseUrl = url; }
 
-  // ── Header builder ────────────────────────────────────────────────────────
-  // No Authorization header needed — HttpOnly cookies are sent automatically
-  // via credentials: 'include' on every request.
+  // ── Header builder ─────────────────────────────────────────
+  // Attaches Bearer token if available (set after login by CoreAuthService).
   _buildHeaders(customHeaders = {}) {
-    return { 'Content-Type': 'application/json', ...customHeaders };
+    const headers = { 'Content-Type': 'application/json', ...customHeaders };
+    if (this._accessToken) {
+      headers['Authorization'] = `Bearer ${this._accessToken}`;
+    }
+    return headers;
   }
 
   // ── Core request method ───────────────────────────────────────────────────
@@ -96,8 +102,8 @@ class ApiClientService {
         requestPayload: body, responsePayload: responseData,
       });
 
-      // Handle 401 — dispatch session-expired event (HttpOnly cookie cleared by backend)
-      // Skip if suppressed (e.g. CoreAuthService probing backend availability)
+      // Handle 401 — dispatch session-expired event so App.jsx clears session
+      // Skip if suppressed (e.g. probing session validity on page load)
       if (response.status === 401 && !this._suppressSessionExpired) {
         this._logger?.warn('ApiClient', logMessages.coreAuth.sessionExpired);
         window.dispatchEvent(new CustomEvent(constants.coreAuth.sessionExpiredEvent));

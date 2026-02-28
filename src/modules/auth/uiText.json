@@ -107,12 +107,32 @@
     },
     "provider": {
       "title": "Authentication Provider",
-      "description": "Configure the primary authentication method for the platform",
-      "local": "Local Database",
-      "localDescription": "Users authenticate against the PostgreSQL users table with bcrypt hashing",
-      "ldap": "LDAP / Active Directory",
-      "ldapDescription": "Authenticate against an enterprise LDAP or AD server",
-      "currentBadge": "Active"
+      "description": "Select the authentication method for the platform. JSON File is the default and works without a database.",
+      "activeBadge": "Active",
+      "comingSoonBadge": "Coming Soon",
+      "switchButton": "Switch to this Provider",
+      "savedMessage": "Authentication provider updated successfully.",
+      "loadingMessage": "Loading provider configuration...",
+      "savingMessage": "Saving provider...",
+      "providers": {
+        "json_file": {
+          "label": "JSON File",
+          "description": "Authenticate against a local users.json file. Default mode — works without a database.",
+          "detail": "Ideal for initial setup, development, and bootstrap before database is configured."
+        },
+        "database": {
+          "label": "Database",
+          "description": "Authenticate against the PostgreSQL system_users table with bcrypt password hashing.",
+          "detail": "Requires the database to be initialized with default data. Switch here after setup."
+        },
+        "social": {
+          "label": "Social / OAuth2",
+          "description": "Authenticate via Google, Microsoft, or other OAuth2 providers.",
+          "detail": "Requires OAuth2 provider configuration. Available in a future release."
+        }
+      },
+      "dbNotReadyWarning": "Database must be initialized before switching to Database authentication.",
+      "dbRequiredNote": "Set up the database in Admin \u2192 Settings \u2192 Database Objects first."
     },
     "password": {
       "title": "Password Policy",

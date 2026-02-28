@@ -4,18 +4,28 @@
 // PURPOSE: REST endpoints for database configuration, connection testing,
 // schema management, and data operations.
 //
+// AUTH STRATEGY (Selective):
+//   - Public (no auth): setup/status routes (called before any user exists)
+//     test-connection, schema-status, create-database, create-schema,
+//     load-default-data, clean-default-data
+//   - Protected (JWT required): destructive routes only
+//     wipe, stats, delete-database
+//
 // ENDPOINTS:
-//   GET  /database/test-connection   — Test DB connection, return latency
-//   POST /database/test-connection   — Test with custom config
-//   GET  /database/schema-status     — Check schema initialization state
-//   POST /database/create-schema     — Create core schema and tables
-//   POST /database/load-default-data — Seed default admin user + config
-//   DELETE /database/load-default-data — Clean default data
-//   POST /database/wipe              — Drop entire schema (destructive!)
-//   GET  /database/stats             — Table sizes and counts
+//   POST   /database/create-database    — Create the database if not exists (public)
+//   DELETE /database/delete-database    — Drop the database entirely (protected)
+//   GET    /database/test-connection    — Test DB connection, return latency (public)
+//   POST   /database/test-connection    — Test with custom config (public)
+//   GET    /database/schema-status      — Check schema initialization state (public)
+//   POST   /database/create-schema      — Create core schema and tables (public)
+//   POST   /database/load-default-data  — Seed default admin user + config (public)
+//   DELETE /database/load-default-data  — Clean default data (public)
+//   POST   /database/wipe               — Drop entire schema (protected)
+//   GET    /database/stats              — Table sizes and counts (protected)
 // ============================================================================
 import { Router } from 'express';
 import DatabaseService from '../database/databaseService.js';
+import { authenticate } from '../middleware/auth.js';
 import { messages } from '../../shared/loadJson.js';
 import logger from '../../shared/logger.js';
 
@@ -39,7 +49,15 @@ router.get('/test-connection', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     logger.error(messages.errors.dbConnectionFailed, { error: err.message });
-    res.status(500).json({ success: false, error: { message: messages.errors.dbConnectionFailed } });
+    // Return 200 with error details so frontend can show helpful message
+    const isDbNotExist = err.message?.includes('does not exist');
+    res.json({ 
+      success: false, 
+      error: { 
+        message: err.message || messages.errors.dbConnectionFailed,
+        code: isDbNotExist ? 'DB_NOT_EXIST' : 'CONNECTION_FAILED'
+      } 
+    });
   }
 });
 
@@ -49,7 +67,15 @@ router.post('/test-connection', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     logger.error(messages.errors.dbConnectionFailed, { error: err.message });
-    res.status(500).json({ success: false, error: { message: messages.errors.dbConnectionFailed } });
+    // Return 200 with error details so frontend can show helpful message
+    const isDbNotExist = err.message?.includes('does not exist');
+    res.json({ 
+      success: false, 
+      error: { 
+        message: err.message || messages.errors.dbConnectionFailed,
+        code: isDbNotExist ? 'DB_NOT_EXIST' : 'CONNECTION_FAILED'
+      } 
+    });
   }
 });
 
@@ -96,8 +122,19 @@ router.delete('/load-default-data', async (req, res) => {
   }
 });
 
-// Wipe database
-router.post('/wipe', async (req, res) => {
+// Delete database (drop the entire PostgreSQL database — PROTECTED)
+router.delete('/delete-database', authenticate, async (req, res) => {
+  try {
+    const result = await DatabaseService.dropDatabase();
+    res.json({ success: true, data: result });
+  } catch (err) {
+    logger.error(messages.errors.dbDeleteFailed, { error: err.message });
+    res.status(500).json({ success: false, error: { message: err.message || messages.errors.dbDeleteFailed } });
+  }
+});
+
+// Wipe schema (drop all tables, keep the database — PROTECTED)
+router.post('/wipe', authenticate, async (req, res) => {
   try {
     const result = await DatabaseService.wipeDatabase();
     res.json({ success: true, data: result });
@@ -107,8 +144,8 @@ router.post('/wipe', async (req, res) => {
   }
 });
 
-// Database stats
-router.get('/stats', async (req, res) => {
+// Database stats (PROTECTED)
+router.get('/stats', authenticate, async (req, res) => {
   try {
     const result = await DatabaseService.getStats();
     res.json({ success: true, data: result });

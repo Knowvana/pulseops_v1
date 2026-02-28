@@ -22,6 +22,8 @@ import uiText from '@modules/auth/uiText.json';
 import logMsgs from '@modules/auth/logMessages.json';
 import urls from '@shared/config/urls.json';
 
+const PROVIDER_LABELS = { json_file: 'JSON File', database: 'Database', social: 'Social/OAuth2' };
+
 const txt = uiText.dashboard;
 
 export default function AuthDashboard() {
@@ -36,18 +38,18 @@ export default function AuthDashboard() {
     setIsRefreshing(true);
     Logger.info('AuthDashboard', logMsgs.dashboardLoaded);
     try {
-      const [userRes, authRes] = await Promise.all([
+      const [configRes, userRes] = await Promise.all([
+        ApiClient.get(urls.authConfig),
         ApiClient.get(urls.usersStats),
-        ApiClient.get('/auth/stats'),
       ]);
 
       setStats({
         totalUsers: userRes?.data?.total || 0,
-        activeSessions: authRes?.data?.activeSessions || 0,
-        failedLogins: authRes?.data?.failedLogins24h || 0,
-        lockedAccounts: authRes?.data?.lockedAccounts || 0,
-        authMethod: authRes?.data?.authMethod || 'local',
-        tokenHealth: authRes?.data?.tokenHealth || 'healthy',
+        activeSessions: 0,
+        failedLogins: 0,
+        lockedAccounts: 0,
+        authMethod: configRes?.data?.provider || 'json_file',
+        tokenHealth: 'healthy',
       });
       Logger.info('AuthDashboard', logMsgs.dashboardRefreshed);
     } catch (err) {
@@ -104,7 +106,7 @@ export default function AuthDashboard() {
         />
         <StatusTile
           label={txt.tiles.authMethod.label}
-          value={stats.authMethod === 'local' ? 'Local DB' : stats.authMethod}
+          value={PROVIDER_LABELS[stats.authMethod] || stats.authMethod}
           detail={txt.tiles.authMethod.detail}
           status="info"
           icon={Key}

@@ -34,5 +34,4 @@ export { default as AppShell } from '@shared/components/layouts/AppShell';
 export { default as Logger } from '@shared/services/logger';
 export { default as ApiClient } from '@shared/services/apiClient';
 export { default as CoreAuthService } from '@shared/services/coreAuthService';
-export { default as AuthService } from '@shared/services/authService';
 export { default as ModuleService } from '@shared/services/moduleService';

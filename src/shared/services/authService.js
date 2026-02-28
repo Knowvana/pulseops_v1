@@ -1,25 +1,17 @@
 // ============================================================================
 // AuthService — PulseOps V1
 //
-// PURPOSE: Authentication service used by the Auth module (add-on).
-// Handles login, logout, session management via the backend API.
-// Uses HttpOnly cookies — frontend NEVER touches JWT tokens directly.
+// DEPRECATED: This service has been superseded by CoreAuthService.
+// All authentication now flows through CoreAuthService which calls the API
+// directly. The API's Auth Module determines the active provider
+// (json_file | database | social) transparently.
 //
-// NOTE: This service requires the Auth module to be installed and the
-// backend API to be running. For core admin login without backend,
-// use CoreAuthService instead.
+// This file is retained for reference only and is NOT exported from @shared.
+// Use CoreAuthService for all authentication operations.
 //
-// SECURITY (XSS Protection):
-//   - JWT tokens stored in HttpOnly cookies set by the backend
-//   - All requests use credentials: 'include' (cookies sent automatically)
-//   - Frontend cannot read or modify tokens — immune to XSS
-//   - RBAC enforced server-side, client only hides UI elements
-//
-// USAGE:
-//   import { AuthService } from '@shared';
-//   const user = await AuthService.login(email, password);
-//   const currentUser = await AuthService.getCurrentUser();
-//   AuthService.logout();
+// USAGE (new):
+//   import { CoreAuthService } from '@shared';
+//   const user = await CoreAuthService.login(email, password);
 //
 // DEPENDENCIES:
 //   - @shared/services/apiClient.js     → HTTP calls (credentials: 'include')

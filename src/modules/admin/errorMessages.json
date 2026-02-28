@@ -9,5 +9,7 @@
   "dbConfigSaveFailed": "Failed to save database configuration.",
   "dbSchemaFailed": "Failed to initialize database schema.",
   "dbDataLoadFailed": "Failed to load default data.",
-  "dbWipeFailed": "Failed to wipe database."
+  "dbWipeFailed": "Failed to wipe database.",
+  "dbCreateFailed": "Failed to create database.",
+  "dbDeleteFailed": "Failed to delete database."
 }

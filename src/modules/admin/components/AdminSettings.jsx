@@ -83,11 +83,19 @@ export function DatabaseConfigTab() {
             meta: versionShort ? `Response: ${latency}ms • Version: ${versionShort}` : `Response: ${latency}ms`,
           });
         } else {
-          setUnifiedStatus({ type: 'connection', status: 'error', message: dbTxt.status.notConnected, meta: null });
+          // Check if error is due to DB not existing
+          const errorMsg = result?.error?.message || '';
+          const isDbNotExist = errorMsg.includes('does not exist') || errorMsg.includes('database') && errorMsg.includes('not');
+          setUnifiedStatus({ 
+            type: 'connection', 
+            status: 'error', 
+            message: isDbNotExist ? dbTxt.status.dbNotExist : dbTxt.status.connectionFailed,
+            meta: null 
+          });
         }
       } catch {
         ApiClient.suppressSessionExpired(false);
-        setUnifiedStatus({ type: 'connection', status: 'error', message: dbTxt.status.notConnected, meta: null });
+        setUnifiedStatus({ type: 'connection', status: 'error', message: dbTxt.status.connectionFailed, meta: null });
       }
     };
     checkOnLoad();
@@ -111,9 +119,13 @@ export function DatabaseConfigTab() {
         });
         Logger.info('AdminSettings', logMsgs.dbConfigSaved, { latencyMs: latency });
       } else {
+        // Check if error is due to DB not existing
+        const errorMsg = result?.error?.message || '';
+        const isDbNotExist = errorMsg.includes('does not exist') || (errorMsg.includes('database') && errorMsg.includes('not'));
         setUnifiedStatus({
           type: 'connection', status: 'error',
-          message: result?.error?.message || dbTxt.status.connectionFailed, meta: null,
+          message: isDbNotExist ? dbTxt.status.dbNotExist : (result?.error?.message || dbTxt.status.connectionFailed),
+          meta: null,
         });
       }
     } catch (err) {
@@ -212,16 +224,31 @@ export function DatabaseConfigTab() {
 
         {unifiedStatus.type && (
           <div className="mb-4">
-            <StatusTile
-              label={unifiedStatus.type === 'connection' ? dbTxt.connectionStatusLabel : dbTxt.saveStatusLabel}
-              value={
-                unifiedStatus.status === 'success'
-                  ? (unifiedStatus.type === 'connection' ? dbTxt.status.connected : dbTxt.status.configSaved)
-                  : (unifiedStatus.type === 'connection' ? dbTxt.status.connectionFailed : dbTxt.status.saveFailed)
-              }
-              status={unifiedStatus.status === 'success' ? 'success' : 'danger'}
-              detail={unifiedStatus.meta || unifiedStatus.message}
-            />
+            {unifiedStatus.status === 'error' && unifiedStatus.message === dbTxt.status.dbNotExist ? (
+              <div className="bg-gradient-to-r from-pink-50 via-rose-50 to-pink-50 rounded-xl border border-pink-200 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gradient-to-br from-pink-100 to-rose-100 rounded-lg shrink-0">
+                    <AlertTriangle size={16} className="text-pink-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-xs font-bold text-pink-800 mb-1">{dbTxt.connectionStatusLabel}</h4>
+                    <p className="text-xs text-pink-700 leading-relaxed mb-2">{unifiedStatus.message}</p>
+                    <p className="text-[11px] text-pink-600 font-semibold">{dbTxt.status.dbNotExistAction}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <StatusTile
+                label={unifiedStatus.type === 'connection' ? dbTxt.connectionStatusLabel : dbTxt.saveStatusLabel}
+                value={
+                  unifiedStatus.status === 'success'
+                    ? (unifiedStatus.type === 'connection' ? dbTxt.status.connected : dbTxt.status.configSaved)
+                    : (unifiedStatus.type === 'connection' ? dbTxt.status.connectionFailed : dbTxt.status.saveFailed)
+                }
+                status={unifiedStatus.status === 'success' ? 'success' : 'danger'}
+                detail={unifiedStatus.meta || unifiedStatus.message}
+              />
+            )}
           </div>
         )}
 
@@ -241,12 +268,16 @@ export function DatabaseConfigTab() {
 // ── Database Objects Tab ────────────────────────────────────────────────────
 export function DatabaseObjectsTab() {
   const [dbConnected, setDbConnected] = useState(null);
+  const [dbExists, setDbExists] = useState(null);
   const [schemaStatus, setSchemaStatus] = useState({ initialized: false });
   const [defaultDataStatus, setDefaultDataStatus] = useState({ loaded: false });
+  const [isCreatingDb, setIsCreatingDb] = useState(false);
+  const [isDeletingDb, setIsDeletingDb] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isCleaningData, setIsCleaningData] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+  const [showDeleteDbConfirm, setShowDeleteDbConfirm] = useState(false);
   const [isWiping, setIsWiping] = useState(false);
 
   const checkStatus = useCallback(async () => {
@@ -255,15 +286,29 @@ export function DatabaseObjectsTab() {
       const result = await ApiClient.get(urls.databaseSchemaStatus);
       ApiClient.suppressSessionExpired(false);
       if (result?.success && result?.data) {
-        setDbConnected(result.data.connected !== false);
-        setSchemaStatus({ initialized: result.data.initialized !== false });
-        setDefaultDataStatus({ loaded: result.data.hasDefaultData !== false });
+        // Backend returns connected:false when DB doesn't exist
+        if (result.data.connected === false) {
+          setDbConnected(true); // API is up, show Create Database UI
+          setDbExists(false);
+          setSchemaStatus({ initialized: false });
+          setDefaultDataStatus({ loaded: false });
+        } else {
+          // DB exists and is connected
+          setDbConnected(true);
+          setDbExists(true);
+          setSchemaStatus({ initialized: result.data.initialized !== false });
+          setDefaultDataStatus({ loaded: result.data.hasDefaultData !== false });
+        }
       } else {
-        setDbConnected(false);
+        // API error but returned success:false — show Create Database UI
+        setDbConnected(true);
+        setDbExists(false);
       }
     } catch {
       ApiClient.suppressSessionExpired(false);
+      // Network error or API down — show "not connected" screen
       setDbConnected(false);
+      setDbExists(false);
     }
   }, []);
 
@@ -299,6 +344,47 @@ export function DatabaseObjectsTab() {
       </div>
     );
   }
+
+  const handleCreateDatabase = async () => {
+    setIsCreatingDb(true);
+    try {
+      ApiClient.suppressSessionExpired(true);
+      const result = await ApiClient.post(urls.databaseCreateDatabase);
+      ApiClient.suppressSessionExpired(false);
+      if (result?.success) {
+        Logger.info('AdminSettings', logMsgs.dbCreated || 'Database created');
+        checkStatus();
+      } else {
+        throw new Error(result?.error?.message || errorMsgs.dbCreateFailed || 'Failed to create database');
+      }
+    } catch (err) {
+      ApiClient.suppressSessionExpired(false);
+      Logger.error('AdminSettings', err.message);
+    } finally {
+      setIsCreatingDb(false);
+    }
+  };
+
+  const handleDeleteDatabase = async () => {
+    setShowDeleteDbConfirm(false);
+    setIsDeletingDb(true);
+    try {
+      const result = await ApiClient.delete(urls.databaseDeleteDatabase);
+      if (result?.success) {
+        Logger.info('AdminSettings', logMsgs.dbDeleted || 'Database deleted');
+        setDbExists(false);
+        setDbConnected(false);
+        setSchemaStatus({ initialized: false });
+        setDefaultDataStatus({ loaded: false });
+      } else {
+        throw new Error(result?.error?.message || errorMsgs.dbDeleteFailed || 'Failed to delete database');
+      }
+    } catch (err) {
+      Logger.error('AdminSettings', err.message);
+    } finally {
+      setIsDeletingDb(false);
+    }
+  };
 
   const handleInitializeSchema = async () => {
     setIsInitializing(true);
@@ -376,6 +462,46 @@ export function DatabaseObjectsTab() {
         <p className="text-sm text-surface-400">{objTxt.description}</p>
       </div>
 
+      {/* Database Instance Status - Pink warning when not exists */}
+      {!dbExists ? (
+        <div className="bg-gradient-to-r from-pink-50 via-rose-50 to-pink-50 rounded-xl border border-pink-200 p-4">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="p-2 bg-gradient-to-br from-pink-100 to-rose-100 rounded-lg shrink-0">
+              <AlertTriangle size={16} className="text-pink-600" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-pink-800 mb-1">{objTxt.dbInstanceNotFound}</h4>
+              <p className="text-[11px] text-pink-700 leading-relaxed">{objTxt.dbInstanceNotFoundDesc}</p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            icon={Database}
+            onClick={handleCreateDatabase}
+            loading={isCreatingDb}
+            className="bg-pink-600 hover:bg-pink-700 text-white"
+          >
+            {isCreatingDb ? objTxt.creating : objTxt.createDatabase}
+          </Button>
+        </div>
+      ) : (
+        <Card className="p-4 border-emerald-200 bg-gradient-to-r from-emerald-50/50 to-teal-50/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg">
+                <Database size={16} className="text-emerald-600" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-surface-700">{objTxt.createDatabaseTitle}</h4>
+                <p className="text-[11px] text-surface-500">{objTxt.createDatabaseDescription}</p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-emerald-600">{objTxt.createDatabaseExists}</span>
+          </div>
+        </Card>
+      )}
+
       {/* Schema Status Card */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -406,12 +532,19 @@ export function DatabaseObjectsTab() {
 
         <div className="flex items-center gap-2">
           {!schemaStatus.initialized && (
-            <Button variant="primary" size="sm" icon={Database} onClick={handleInitializeSchema} loading={isInitializing}>
+            <Button 
+              variant="primary" 
+              size="sm" 
+              icon={Database} 
+              onClick={handleInitializeSchema} 
+              loading={isInitializing}
+              disabled={!dbExists}
+            >
               {isInitializing ? objTxt.initializing : objTxt.initializeSchema}
             </Button>
           )}
           <Button variant="secondary" size="sm" icon={RefreshCw} onClick={checkStatus}>
-            {commonTxt.tabs.general === 'General' ? 'Refresh' : 'Refresh'}
+            Refresh
           </Button>
         </div>
       </Card>
@@ -445,7 +578,7 @@ export function DatabaseObjectsTab() {
         </div>
       </Card>
 
-      {/* Danger Zone — Wipe Database */}
+      {/* Danger Zone — Wipe Schema & Delete Database */}
       <Card className="p-4 border-rose-200 bg-gradient-to-r from-rose-50/50 to-red-50/30">
         <div className="flex items-start gap-3 mb-3">
           <div className="p-2 bg-gradient-to-br from-rose-100 to-red-100 rounded-lg shrink-0">
@@ -456,9 +589,28 @@ export function DatabaseObjectsTab() {
             <p className="text-xs text-surface-500">{objTxt.wipeDescription}</p>
           </div>
         </div>
-        <Button variant="danger" size="sm" icon={Trash2} onClick={() => setShowWipeConfirm(true)} loading={isWiping}>
-          {objTxt.wipeDatabase}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="danger" 
+            size="sm" 
+            icon={Trash2} 
+            onClick={() => setShowWipeConfirm(true)} 
+            loading={isWiping}
+            disabled={!dbExists || !schemaStatus.initialized}
+          >
+            {objTxt.wipeDatabase}
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            icon={Trash2}
+            onClick={() => setShowDeleteDbConfirm(true)}
+            loading={isDeletingDb}
+            disabled={!dbExists}
+          >
+            {objTxt.deleteDatabase}
+          </Button>
+        </div>
       </Card>
 
       <ConfirmDialog
@@ -470,6 +622,17 @@ export function DatabaseObjectsTab() {
         variant="danger"
         confirmLabel={objTxt.wipeDatabase}
         loading={isWiping}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteDbConfirm}
+        onClose={() => setShowDeleteDbConfirm(false)}
+        onConfirm={handleDeleteDatabase}
+        title={objTxt.deleteDatabaseTitle}
+        message={objTxt.deleteDatabaseDescription}
+        variant="danger"
+        confirmLabel={objTxt.deleteDatabase}
+        loading={isDeletingDb}
       />
     </div>
   );

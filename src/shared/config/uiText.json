@@ -69,7 +69,7 @@
     "loadingButton": "Signing in...",
     "forgotPassword": "Forgot password?",
     "poweredBy": "Powered by PulseOps",
-    "coreAdminHint": "Default: admin@pulseops.local / PulseOps@2024"
+    "coreAdminHint": "Default: admin@test.com / Infosys@123"
   },
   "platformAdmin": {
     "sideNav": {
