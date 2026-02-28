@@ -1,0 +1,15 @@
+{
+  "moduleId": "platform_admin",
+  "moduleName": "Admin",
+  "moduleShortName": "Admin",
+  "moduleVersion": "1.0.0",
+  "moduleDescription": "Platform dashboard, module management, user administration, and global settings",
+  "roles": ["super_admin", "admin"],
+  "isCore": true,
+  "order": 0,
+  "defaultView": "dashboard",
+  "refreshIntervalMs": 30000,
+  "healthCheckIntervalMs": 60000,
+  "maxRecentActivityItems": 50,
+  "dbObjectCategories": ["core", "modules", "logs", "config"]
+}

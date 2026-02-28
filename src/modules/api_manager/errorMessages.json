@@ -1,0 +1,13 @@
+{
+  "dashboardLoadFailed": "Failed to load API Manager dashboard data.",
+  "endpointsLoadFailed": "Failed to load API endpoints list.",
+  "endpointRegisterFailed": "Failed to register API endpoint.",
+  "endpointUpdateFailed": "Failed to update API endpoint.",
+  "endpointRemoveFailed": "Failed to remove API endpoint.",
+  "testRequestFailed": "API test request failed.",
+  "healthCheckFailed": "API health check failed.",
+  "configSaveFailed": "Failed to save API Manager configuration.",
+  "rateLimitConfigFailed": "Failed to save rate limiting configuration.",
+  "corsConfigFailed": "Failed to save CORS configuration.",
+  "securityConfigFailed": "Failed to save API security configuration."
+}

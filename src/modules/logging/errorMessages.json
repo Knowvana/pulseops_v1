@@ -1,0 +1,12 @@
+{
+  "dashboardLoadFailed": "Failed to load logging dashboard data.",
+  "systemLogsLoadFailed": "Failed to load system logs.",
+  "apiLogsLoadFailed": "Failed to load API logs.",
+  "queryFailed": "Log query execution failed.",
+  "exportFailed": "Failed to export logs.",
+  "configSaveFailed": "Failed to save logging configuration.",
+  "retentionPolicySaveFailed": "Failed to save retention policy.",
+  "outputConfigSaveFailed": "Failed to save output targets.",
+  "flushFailed": "Failed to flush log buffer to database.",
+  "clearFailed": "Failed to clear log buffer."
+}

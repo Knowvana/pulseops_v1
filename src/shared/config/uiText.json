@@ -1,0 +1,228 @@
+{
+  "topNav": {
+    "brand": {
+      "appName": "PulseOps",
+      "subtitle": "Enterprise"
+    },
+    "buttons": {
+      "systemAdmin": "System Admin",
+      "settings": "Global Settings",
+      "signOut": "Sign Out",
+      "monitor": "Monitor"
+    },
+    "userMenu": {
+      "roleLabel": "Role",
+      "signOutLabel": "Sign Out",
+      "profileLabel": "Profile",
+      "preferencesLabel": "Preferences"
+    }
+  },
+  "sideNav": {
+    "header": {
+      "collapseLabel": "Collapse",
+      "expandTooltip": "Expand sidebar",
+      "collapseTooltip": "Collapse sidebar"
+    }
+  },
+  "rightPanel": {
+    "tabs": {
+      "systemLogs": "System Logs",
+      "apiCalls": "API Calls",
+      "reportIssue": "Report Issue"
+    },
+    "logs": {
+      "filterAll": "all",
+      "filterDebug": "debug",
+      "filterInfo": "info",
+      "filterWarn": "warn",
+      "filterError": "error",
+      "clearTooltip": "Clear logs",
+      "emptyMessage": "No logs yet"
+    },
+    "api": {
+      "callsLabel": "calls",
+      "clearTooltip": "Clear API logs",
+      "emptyMessage": "No API calls yet"
+    },
+    "report": {
+      "title": "Report an Issue",
+      "description": "Describe the issue you encountered. Recent logs will be automatically attached.",
+      "issueTitleLabel": "Issue Title",
+      "issueTitlePlaceholder": "Brief description of the issue",
+      "categoryLabel": "Category",
+      "categories": ["Bug Report", "Feature Request", "Performance Issue", "Access / Permissions", "Other"],
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Steps to reproduce, expected vs actual behavior...",
+      "attachLogsLabel": "Attach recent system logs",
+      "submitButton": "Submit Report",
+      "footerNote": "Reports are sent to the platform administrator for review."
+    }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to your account",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "admin@pulseops.local",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "submitButton": "Sign In",
+    "loadingButton": "Signing in...",
+    "forgotPassword": "Forgot password?",
+    "poweredBy": "Powered by PulseOps",
+    "coreAdminHint": "Default: admin@pulseops.local / PulseOps@2024"
+  },
+  "platformAdmin": {
+    "sideNav": {
+      "title": "Admin",
+      "subtitle": "System Management"
+    },
+    "navItems": {
+      "dashboard": "Dashboard",
+      "moduleManager": "Module Manager",
+      "users": "Users",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "pageTitle": "Platform Dashboard",
+      "welcome": "Welcome, {name}",
+      "tiles": {
+        "systemHealth": {
+          "label": "System Health",
+          "operational": "Operational",
+          "degraded": "Degraded",
+          "checking": "Checking..."
+        },
+        "dbConnection": {
+          "label": "Database",
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "checking": "Checking..."
+        },
+        "apiHealth": {
+          "label": "API Health",
+          "healthy": "Healthy",
+          "unhealthy": "Unhealthy",
+          "checking": "Checking..."
+        },
+        "modules": {
+          "label": "Modules",
+          "detail": "Installed modules"
+        },
+        "users": {
+          "label": "Users",
+          "manage": "Manage"
+        }
+      }
+    },
+    "moduleManager": {
+      "pageTitle": "Module Manager",
+      "subtitle": "Install, enable, disable, and manage platform modules",
+      "tabs": {
+        "installed": "Installed",
+        "available": "Available",
+        "registry": "Module Registry"
+      },
+      "coreBadge": "Core",
+      "installedBadge": "Installed",
+      "enabledBadge": "Enabled",
+      "disabledBadge": "Disabled",
+      "installButton": "Install",
+      "installingButton": "Installing...",
+      "enableButton": "Enable",
+      "disableButton": "Disable",
+      "removeButton": "Remove",
+      "configureButton": "Configure",
+      "coreMessage": "Core module — always active",
+      "schemaReady": "Schema Ready",
+      "schemaNotReady": "Schema Not Initialized",
+      "tables": "tables",
+      "version": "Version",
+      "noModulesAvailable": "No additional modules available for installation",
+      "noModulesInstalled": "No modules installed yet",
+      "confirmRemove": "Are you sure you want to remove this module? All module data will be lost.",
+      "confirmDisable": "Are you sure you want to disable this module?"
+    },
+    "settings": {
+      "pageTitle": "Platform Settings",
+      "subtitle": "Global configuration — Admin only",
+      "tabs": {
+        "database": "Database Configuration",
+        "dbObjects": "Database Objects",
+        "general": "General"
+      },
+      "database": {
+        "title": "Database Connection",
+        "description": "Configure the PostgreSQL database connection for the platform.",
+        "fields": {
+          "host": "Host",
+          "port": "Port",
+          "database": "Database Name",
+          "username": "Username",
+          "password": "Password",
+          "ssl": "SSL Connection"
+        },
+        "placeholders": {
+          "host": "localhost",
+          "port": "5432",
+          "database": "pulseops_v1",
+          "username": "postgres",
+          "password": "••••••••"
+        },
+        "buttons": {
+          "testConnect": "Test Connect",
+          "testing": "Testing...",
+          "saveConfig": "Save Configuration",
+          "saving": "Saving..."
+        },
+        "status": {
+          "connected": "Connected",
+          "notConnected": "Not Connected",
+          "testing": "Testing connection..."
+        }
+      },
+      "dbObjects": {
+        "title": "Database Objects Management",
+        "description": "Manage database schema and seed data.",
+        "schemaStatus": "Database Schema",
+        "schemaInitialized": "Initialized",
+        "schemaNotInitialized": "Not Initialized",
+        "initializeSchema": "Initialize Database",
+        "initializing": "Initializing...",
+        "loadDefaultData": "Load Default Data",
+        "loadDemoData": "Load Demo Data",
+        "wipeDatabase": "Wipe All Data",
+        "wipeTitle": "Danger Zone",
+        "wipeDescription": "Delete all data from all tables. This action cannot be undone."
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "saved": "Saved!",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "filter": "Filter",
+    "noData": "No data available",
+    "yes": "Yes",
+    "no": "No",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "active": "Active",
+    "inactive": "Inactive",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  }
+}

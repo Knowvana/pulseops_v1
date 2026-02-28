@@ -1,0 +1,78 @@
+{
+  "sideNav": {
+    "title": "Demo Test",
+    "subtitle": "Pattern Validation"
+  },
+  "navItems": {
+    "dashboard": "Dashboard",
+    "items": "Demo Items",
+    "config": "Configuration"
+  },
+  "dashboard": {
+    "pageTitle": "Demo Test Dashboard",
+    "subtitle": "Validate the plug-and-play module pattern with this test module",
+    "tiles": {
+      "totalItems": { "label": "Total Items", "detail": "Demo records" },
+      "activeItems": { "label": "Active Items", "detail": "Currently active" },
+      "moduleStatus": { "label": "Module Status", "detail": "Operational state" }
+    },
+    "patternCard": {
+      "title": "Module Pattern Validation",
+      "checks": {
+        "manifest": "Manifest follows contract",
+        "navItems": "Has mandatory nav items (dashboard + config)",
+        "jsonConfigs": "All configs in JSON files",
+        "aliasImports": "Uses @shared alias imports",
+        "noInlineText": "No inline UI text",
+        "noInlineLogs": "No inline log messages",
+        "settingsConfig": "Uses shared SettingsConfig",
+        "designSystem": "Uses shared design system components"
+      }
+    }
+  },
+  "items": {
+    "pageTitle": "Demo Items",
+    "subtitle": "CRUD operations on demo data to test module data isolation",
+    "addButton": "Add Item",
+    "columns": {
+      "id": "ID",
+      "label": "Label",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "labelField": "Item Label",
+      "labelPlaceholder": "Enter item label",
+      "statusField": "Status",
+      "statusOptions": ["active", "inactive"],
+      "saveButton": "Save Item"
+    },
+    "noItems": "No demo items yet. Add some to test the pattern."
+  },
+  "config": {
+    "pageTitle": "Demo Configuration",
+    "pageSubtitle": "Configure demo module settings to validate the config tab pattern",
+    "tabs": {
+      "general": "General",
+      "data": "Demo Data"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Basic configuration options for the demo module",
+      "enableFeatureA": "Enable Feature A",
+      "enableFeatureB": "Enable Feature B",
+      "maxItems": "Max Demo Items",
+      "refreshInterval": "Refresh Interval (seconds)"
+    },
+    "data": {
+      "title": "Demo Data Management",
+      "description": "Load or clear demo data for testing",
+      "loadButton": "Load Demo Data",
+      "clearButton": "Clear All Data",
+      "loadedMessage": "Demo data loaded successfully",
+      "clearedMessage": "All demo data cleared"
+    },
+    "saveButton": "Save Configuration",
+    "saved": "Configuration saved"
+  }
+}

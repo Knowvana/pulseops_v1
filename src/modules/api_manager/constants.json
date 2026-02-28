@@ -1,0 +1,22 @@
+{
+  "moduleId": "api_manager",
+  "moduleName": "API Manager",
+  "moduleShortName": "API",
+  "moduleVersion": "1.0.0",
+  "moduleDescription": "API gateway — endpoint management, testing, health monitoring, rate limiting, CORS, and security",
+  "roles": ["super_admin", "admin", "manager"],
+  "isCore": false,
+  "order": 3,
+  "defaultView": "dashboard",
+  "defaultTimeout": 30000,
+  "maxRetries": 3,
+  "retryDelayMs": 1000,
+  "supportedMethods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  "supportedContentTypes": ["application/json", "application/xml", "multipart/form-data", "text/plain"],
+  "healthCheckIntervalMs": 60000,
+  "maxEndpoints": 500,
+  "rateLimitDefault": {
+    "windowMs": 900000,
+    "maxRequests": 100
+  }
+}

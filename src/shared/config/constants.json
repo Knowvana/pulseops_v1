@@ -1,0 +1,67 @@
+{
+  "coreAuth": {
+    "configKey": "pulseops_v1_core_admin",
+    "loggerConfigKey": "pulseops_v1_logger_config",
+    "sessionExpiredEvent": "auth:session-expired",
+    "sessionKey": "pulseops_v1_session",
+    "defaultAdmin": {
+      "email": "admin@test.com",
+      "password": "Infosys@123",
+      "name": "Core Admin",
+      "role": "super_admin"
+    },
+    "roles": {
+      "superAdmin": "super_admin",
+      "admin": "admin",
+      "manager": "manager",
+      "user": "user",
+      "viewer": "viewer"
+    },
+    "roleHierarchy": ["super_admin", "admin", "manager", "user", "viewer"]
+  },
+  "modules": {
+    "statuses": {
+      "available": "available",
+      "installed": "installed",
+      "enabled": "enabled",
+      "disabled": "disabled",
+      "error": "error"
+    },
+    "mandatoryNavItems": ["dashboard", "config"],
+    "coreModuleIds": ["platform_admin"]
+  },
+  "logging": {
+    "levels": ["debug", "info", "warn", "error"],
+    "defaultLevel": "info",
+    "maxBufferSize": 500,
+    "defaultSyncLimit": 100,
+    "sources": ["UI", "API", "Database", "System", "Module"],
+    "flushIntervalMs": 30000
+  },
+  "ui": {
+    "sideNavCollapsedWidth": "w-16",
+    "sideNavExpandedWidth": "w-60",
+    "topNavHeight": "h-14",
+    "animationDuration": 300,
+    "toastDurationMs": 3000,
+    "modalBackdropClass": "bg-black/50",
+    "defaultPageSize": 25,
+    "pageSizeOptions": [10, 25, 50, 100]
+  },
+  "api": {
+    "timeoutMs": 30000,
+    "retryAttempts": 3,
+    "retryDelayMs": 1000,
+    "rateLimitWindowMs": 900000,
+    "rateLimitMaxRequests": 100
+  },
+  "database": {
+    "defaultPort": 5432,
+    "defaultHost": "localhost",
+    "defaultName": "pulseops_v1",
+    "sslModes": ["disable", "require", "verify-ca", "verify-full"],
+    "maxPoolSize": 20,
+    "idleTimeoutMs": 30000,
+    "connectionTimeoutMs": 5000
+  }
+}

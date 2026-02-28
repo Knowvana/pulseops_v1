@@ -1,0 +1,15 @@
+{
+  "dashboardLoadFailed": "Failed to load authentication dashboard data.",
+  "userCreateFailed": "Failed to create user account.",
+  "userUpdateFailed": "Failed to update user account.",
+  "userDeleteFailed": "Failed to delete user account.",
+  "roleChangeFailed": "Failed to change user role.",
+  "sessionRevokeFailed": "Failed to revoke user session.",
+  "configSaveFailed": "Failed to save authentication configuration.",
+  "providerChangeFailed": "Failed to change authentication provider.",
+  "passwordPolicyInvalid": "Password policy values are invalid.",
+  "sessionPolicyInvalid": "Session policy values are invalid.",
+  "lockoutPolicyInvalid": "Lockout policy values are invalid.",
+  "tokenSettingsInvalid": "Token settings values are invalid.",
+  "auditLogLoadFailed": "Failed to load audit log entries."
+}

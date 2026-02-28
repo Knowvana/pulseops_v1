@@ -1,0 +1,19 @@
+{
+  "moduleId": "logging",
+  "moduleName": "Logging",
+  "moduleShortName": "Logs",
+  "moduleVersion": "1.0.0",
+  "moduleDescription": "Global log management — system logs, API logs, log queries, retention policies, and output configuration",
+  "roles": ["super_admin", "admin"],
+  "isCore": false,
+  "order": 2,
+  "defaultView": "dashboard",
+  "retentionDays": 90,
+  "maxQueryResults": 1000,
+  "defaultPageSize": 50,
+  "logLevels": ["debug", "info", "warn", "error"],
+  "logSources": ["UI", "API", "Database", "System", "Module", "Auth", "Scheduler"],
+  "exportFormats": ["json", "csv"],
+  "autoFlushIntervalMs": 30000,
+  "maxBufferSize": 500
+}

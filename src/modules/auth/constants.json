@@ -1,0 +1,38 @@
+{
+  "moduleId": "auth",
+  "moduleName": "Authentication",
+  "moduleShortName": "Auth",
+  "moduleVersion": "1.0.0",
+  "moduleDescription": "Global authentication, authorization, user management, RBAC, session control, and security audit",
+  "roles": ["super_admin", "admin"],
+  "isCore": false,
+  "order": 1,
+  "defaultView": "dashboard",
+  "passwordPolicy": {
+    "minLength": 8,
+    "requireUppercase": true,
+    "requireLowercase": true,
+    "requireNumber": true,
+    "requireSpecial": true,
+    "maxAge": 90,
+    "historyCount": 5
+  },
+  "sessionPolicy": {
+    "maxConcurrentSessions": 3,
+    "sessionTimeoutMinutes": 480,
+    "idleTimeoutMinutes": 30,
+    "rememberMeDays": 30
+  },
+  "lockoutPolicy": {
+    "maxAttempts": 5,
+    "lockoutDurationMinutes": 15,
+    "resetCounterMinutes": 30
+  },
+  "tokenPolicy": {
+    "accessTokenExpiryMinutes": 60,
+    "refreshTokenExpiryDays": 7,
+    "rotateRefreshTokens": true
+  },
+  "mfaMethods": ["totp", "email", "sms"],
+  "supportedProviders": ["local", "ldap", "saml", "oauth2"]
+}

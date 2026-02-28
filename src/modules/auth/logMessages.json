@@ -1,0 +1,19 @@
+{
+  "dashboardLoaded": "Auth dashboard loaded",
+  "dashboardRefreshed": "Auth dashboard data refreshed",
+  "userCreated": "User created via auth module",
+  "userUpdated": "User updated via auth module",
+  "userDeleted": "User deleted via auth module",
+  "roleChanged": "User role changed",
+  "sessionRevoked": "User session revoked",
+  "allSessionsRevoked": "All sessions revoked for user",
+  "auditLogViewed": "Audit log viewed",
+  "configSaved": "Auth configuration saved",
+  "providerChanged": "Authentication provider changed",
+  "passwordPolicySaved": "Password policy saved",
+  "sessionPolicySaved": "Session policy saved",
+  "lockoutPolicySaved": "Lockout policy saved",
+  "tokenSettingsSaved": "Token settings saved",
+  "accountLocked": "Account locked due to failed attempts",
+  "accountUnlocked": "Account unlocked by admin"
+}

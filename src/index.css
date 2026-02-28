@@ -1,0 +1,37 @@
+/* ============================================================================
+ * Global Styles — PulseOps V1
+ *
+ * PURPOSE: Tailwind CSS directives and minimal global styles. All component
+ * styling uses Tailwind utility classes. This file only contains:
+ *   1. Tailwind layer imports
+ *   2. Custom scrollbar styles
+ *   3. Global animation utilities
+ *
+ * HOW TO USE: Imported by main.jsx. Never import this file from components.
+ * ========================================================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Custom scrollbar (thin, matches surface theme) ────────────────────────── */
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "dashboardLoaded": "API Manager dashboard loaded",
+  "dashboardRefreshed": "API Manager dashboard data refreshed",
+  "endpointsLoaded": "API endpoints list loaded",
+  "endpointRegistered": "New API endpoint registered",
+  "endpointUpdated": "API endpoint updated",
+  "endpointRemoved": "API endpoint removed",
+  "testRequestSent": "API test request sent",
+  "testRequestCompleted": "API test request completed",
+  "testRequestFailed": "API test request failed",
+  "healthCheckStarted": "API health check started",
+  "healthCheckCompleted": "API health check completed",
+  "configSaved": "API Manager configuration saved",
+  "rateLimitConfigSaved": "Rate limiting configuration saved",
+  "corsConfigSaved": "CORS configuration saved",
+  "securityConfigSaved": "API security configuration saved"
+}

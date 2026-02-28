@@ -1,0 +1,111 @@
+{
+  "sideNav": {
+    "title": "Admin",
+    "subtitle": "System Management"
+  },
+  "navItems": {
+    "dashboard": "Dashboard",
+    "moduleManager": "Module Manager",
+    "users": "Users",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "pageTitle": "Platform Dashboard",
+    "subtitle": "System health, module status, and quick actions",
+    "tiles": {
+      "systemHealth": { "label": "System Health", "operational": "Operational", "degraded": "Degraded", "checking": "Checking..." },
+      "dbConnection": { "label": "Database", "connected": "Connected", "disconnected": "Disconnected", "checking": "Checking..." },
+      "apiHealth": { "label": "API Health", "healthy": "Healthy", "unhealthy": "Unhealthy", "checking": "Checking..." },
+      "modules": { "label": "Modules", "detail": "Installed modules" },
+      "users": { "label": "Users", "manage": "Manage" }
+    }
+  },
+  "moduleManager": {
+    "pageTitle": "Module Manager",
+    "subtitle": "Install, enable, disable, and manage platform modules",
+    "tabs": { "installed": "Installed", "available": "Available" },
+    "coreBadge": "Core",
+    "enabledBadge": "Enabled",
+    "disabledBadge": "Disabled",
+    "installButton": "Install",
+    "enableButton": "Enable",
+    "disableButton": "Disable",
+    "removeButton": "Remove",
+    "coreMessage": "Core module — always active",
+    "version": "Version",
+    "noModulesAvailable": "No additional modules available",
+    "noModulesInstalled": "No modules installed yet"
+  },
+  "settings": {
+    "pageTitle": "Platform Settings",
+    "subtitle": "Global configuration — Admin only",
+    "tabs": {
+      "database": "Database Configuration",
+      "dbObjects": "Database Objects",
+      "general": "General"
+    },
+    "database": {
+      "title": "Database Connection",
+      "description": "Configure the PostgreSQL database connection for the platform.",
+      "typeLabel": "PostgreSQL Database",
+      "typeDescription": "Enterprise backend with full module support, schema management, and data persistence",
+      "fields": {
+        "host": "Host",
+        "port": "Port",
+        "database": "Database Name",
+        "schema": "Schema Name",
+        "username": "Username",
+        "password": "Password",
+        "ssl": "SSL Connection"
+      },
+      "placeholders": {
+        "host": "localhost",
+        "port": "5432",
+        "database": "pulseops_v1",
+        "schema": "pulseops",
+        "username": "postgres",
+        "password": "••••••••"
+      },
+      "buttons": {
+        "testConnect": "Test Connection",
+        "testing": "Testing...",
+        "saveConfig": "Save Configuration",
+        "saving": "Saving..."
+      },
+      "status": {
+        "connected": "Connected",
+        "notConnected": "Not Connected",
+        "connectionFailed": "Connection Failed",
+        "configSaved": "Configuration Saved",
+        "saveFailed": "Save Failed"
+      },
+      "connectionStatusLabel": "Connection Status",
+      "saveStatusLabel": "Save Status"
+    },
+    "dbObjects": {
+      "title": "Database Objects Management",
+      "description": "Manage database schema, seed data, and perform maintenance operations.",
+      "schemaStatus": "Database Schema",
+      "schemaInitialized": "Initialized",
+      "schemaNotInitialized": "Not Initialized",
+      "schemaDescription": "Create all required database tables in the configured schema.",
+      "schemaReady": "Database schema initialized and ready",
+      "initializeSchema": "Initialize Database",
+      "initializing": "Initializing...",
+      "defaultData": "Default Data",
+      "defaultDataLoaded": "Loaded",
+      "defaultDataNotLoaded": "Not Loaded",
+      "defaultDataDescription": "Load default admin user, system configuration, and module registry.",
+      "loadDefaultData": "Load Default Data",
+      "reloadDefaultData": "Reload Default Data",
+      "cleanDefaultData": "Clean Default Data",
+      "loading": "Loading...",
+      "wipeTitle": "Danger Zone",
+      "wipeDescription": "Delete all data from all tables. This action cannot be undone.",
+      "wipeDatabase": "Wipe All Data",
+      "retryConnection": "Retry Connection",
+      "dbNotSetupTitle": "Database Not Connected",
+      "dbNotSetupMessage": "Please configure the database connection in the Database Configuration tab and verify the connection before using this section."
+    }
+  }
+}

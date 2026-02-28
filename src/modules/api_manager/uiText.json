@@ -1,0 +1,110 @@
+{
+  "sideNav": {
+    "title": "API Manager",
+    "subtitle": "API Gateway & Endpoints"
+  },
+  "navItems": {
+    "dashboard": "Dashboard",
+    "endpoints": "Endpoints",
+    "testing": "API Testing",
+    "health": "Health Monitor",
+    "config": "Configuration"
+  },
+  "dashboard": {
+    "pageTitle": "API Manager Dashboard",
+    "subtitle": "Monitor API health, endpoint statistics, and request throughput",
+    "tiles": {
+      "totalEndpoints": { "label": "Total Endpoints", "detail": "Registered routes" },
+      "activeEndpoints": { "label": "Active Endpoints", "detail": "Currently serving" },
+      "requestsToday": { "label": "Requests Today", "detail": "Total API calls" },
+      "avgLatency": { "label": "Avg Latency", "detail": "Response time (ms)" },
+      "errorRate": { "label": "Error Rate", "detail": "Failed requests %" },
+      "uptime": { "label": "API Uptime", "detail": "Since last restart" }
+    }
+  },
+  "endpoints": {
+    "pageTitle": "API Endpoints",
+    "subtitle": "View and manage all registered API endpoints",
+    "columns": {
+      "method": "Method",
+      "path": "Path",
+      "module": "Module",
+      "auth": "Auth Required",
+      "rateLimit": "Rate Limit",
+      "status": "Status"
+    },
+    "addButton": "Register Endpoint",
+    "noEndpoints": "No endpoints registered yet"
+  },
+  "testing": {
+    "pageTitle": "API Testing",
+    "subtitle": "Test API endpoints directly from the browser",
+    "method": "Method",
+    "url": "URL",
+    "urlPlaceholder": "/api/health",
+    "headers": "Headers",
+    "body": "Request Body",
+    "bodyPlaceholder": "{ }",
+    "sendButton": "Send Request",
+    "response": "Response",
+    "statusCode": "Status",
+    "duration": "Duration",
+    "noResponse": "Send a request to see the response"
+  },
+  "health": {
+    "pageTitle": "API Health Monitor",
+    "subtitle": "Real-time health status of all API endpoints and services",
+    "columns": {
+      "service": "Service",
+      "endpoint": "Endpoint",
+      "status": "Status",
+      "latency": "Latency",
+      "lastCheck": "Last Check"
+    },
+    "healthy": "Healthy",
+    "unhealthy": "Unhealthy",
+    "degraded": "Degraded",
+    "checking": "Checking..."
+  },
+  "config": {
+    "pageTitle": "API Configuration",
+    "pageSubtitle": "Configure API gateway settings, rate limiting, CORS, and timeouts",
+    "tabs": {
+      "general": "General",
+      "rateLimit": "Rate Limiting",
+      "cors": "CORS",
+      "security": "Security"
+    },
+    "general": {
+      "title": "General API Settings",
+      "description": "Configure base URL, timeout, and retry behavior",
+      "baseUrl": "API Base URL",
+      "timeout": "Request Timeout (ms)",
+      "maxRetries": "Max Retries",
+      "retryDelay": "Retry Delay (ms)"
+    },
+    "rateLimit": {
+      "title": "Rate Limiting",
+      "description": "Configure request rate limits to protect the API from abuse",
+      "windowMs": "Rate Limit Window (ms)",
+      "maxRequests": "Max Requests per Window",
+      "enabled": "Enable Rate Limiting"
+    },
+    "cors": {
+      "title": "CORS Configuration",
+      "description": "Configure Cross-Origin Resource Sharing policies",
+      "allowedOrigins": "Allowed Origins",
+      "allowedMethods": "Allowed Methods",
+      "allowCredentials": "Allow Credentials"
+    },
+    "security": {
+      "title": "API Security",
+      "description": "Configure API-level security headers and protections",
+      "helmet": "Enable Helmet Security Headers",
+      "xssProtection": "XSS Protection",
+      "contentSecurityPolicy": "Content Security Policy"
+    },
+    "saveButton": "Save Configuration",
+    "saved": "Configuration saved"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "coreAuth": {
+    "invalidCredentials": "Invalid email or password. Please check your core admin credentials.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "notConfigured": "Core admin credentials have not been configured.",
+    "backendUnavailable": "Backend API is not available. Using offline core admin mode."
+  },
+  "auth": {
+    "invalidCredentials": "Invalid email or password. Please try again.",
+    "accountLocked": "Account is locked due to too many failed attempts. Try again in {minutes} minutes.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "tokenInvalid": "Authentication token is invalid or corrupted.",
+    "tokenExpired": "Authentication token has expired.",
+    "refreshFailed": "Unable to refresh session. Please sign in again.",
+    "unauthorized": "You do not have permission to access this resource.",
+    "forbidden": "Access denied. Insufficient privileges.",
+    "userNotFound": "User account not found.",
+    "userDisabled": "This user account has been disabled.",
+    "passwordTooWeak": "Password does not meet security requirements.",
+    "passwordMismatch": "Passwords do not match.",
+    "emailInvalid": "Please enter a valid email address.",
+    "emailExists": "An account with this email already exists.",
+    "requiredField": "{field} is required."
+  },
+  "api": {
+    "networkError": "Unable to connect to the server. Please check your internet connection.",
+    "timeout": "The request took too long to complete. Please try again.",
+    "serverError": "An internal server error occurred. Please try again later.",
+    "badRequest": "The request was invalid. Please check your input.",
+    "notFound": "The requested resource was not found.",
+    "conflict": "A conflict occurred. The resource may have been modified.",
+    "rateLimited": "Too many requests. Please wait a moment before trying again.",
+    "serviceUnavailable": "The service is temporarily unavailable. Please try again later.",
+    "payloadTooLarge": "The request payload is too large.",
+    "unknownError": "An unexpected error occurred. Please try again."
+  },
+  "database": {
+    "connectionFailed": "Unable to connect to the database. Please verify your connection settings.",
+    "connectionTimeout": "Database connection timed out. The server may be unreachable.",
+    "schemaCreateFailed": "Failed to create database schema. Check database permissions.",
+    "schemaAlreadyExists": "Database schema already exists. Use migration to update.",
+    "dataLoadFailed": "Failed to load data into the database.",
+    "wipeFailed": "Failed to wipe database data.",
+    "queryFailed": "Database query failed.",
+    "constraintViolation": "Data integrity constraint violated.",
+    "duplicateEntry": "A record with this identifier already exists.",
+    "invalidConfig": "Database configuration is invalid. Please check all fields."
+  },
+  "modules": {
+    "notFound": "Module '{moduleId}' was not found.",
+    "alreadyInstalled": "Module '{moduleId}' is already installed.",
+    "installFailed": "Failed to install module '{moduleId}'. {reason}",
+    "enableFailed": "Failed to enable module '{moduleId}'. Ensure schema is initialized.",
+    "disableFailed": "Failed to disable module '{moduleId}'.",
+    "removeFailed": "Failed to remove module '{moduleId}'.",
+    "coreCannotDisable": "Core module '{moduleId}' cannot be disabled.",
+    "coreCannotRemove": "Core module '{moduleId}' cannot be removed.",
+    "dependencyMissing": "Module '{moduleId}' requires module '{dependency}' to be installed.",
+    "manifestInvalid": "Module manifest is invalid. Missing required fields: {fields}",
+    "schemaInitFailed": "Failed to initialize schema for module '{moduleId}'.",
+    "incompatibleVersion": "Module '{moduleId}' version {version} is not compatible with platform version {platformVersion}."
+  },
+  "validation": {
+    "required": "{field} is required.",
+    "minLength": "{field} must be at least {min} characters.",
+    "maxLength": "{field} must be at most {max} characters.",
+    "pattern": "{field} format is invalid.",
+    "email": "Please enter a valid email address.",
+    "url": "Please enter a valid URL.",
+    "numeric": "{field} must be a number.",
+    "range": "{field} must be between {min} and {max}.",
+    "unique": "{field} must be unique."
+  },
+  "common": {
+    "unexpectedError": "An unexpected error occurred. Please try again.",
+    "operationFailed": "The operation could not be completed.",
+    "saveFailed": "Failed to save changes. Please try again.",
+    "loadFailed": "Failed to load data. Please refresh the page.",
+    "deleteFailed": "Failed to delete the item. Please try again.",
+    "permissionDenied": "You do not have permission to perform this action.",
+    "featureDisabled": "This feature is currently disabled.",
+    "maintenanceMode": "The system is currently under maintenance. Please try again later."
+  }
+}

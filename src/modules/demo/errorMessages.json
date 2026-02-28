@@ -1,0 +1,9 @@
+{
+  "dashboardLoadFailed": "Failed to load demo dashboard data.",
+  "itemCreateFailed": "Failed to create demo item.",
+  "itemUpdateFailed": "Failed to update demo item.",
+  "itemDeleteFailed": "Failed to delete demo item.",
+  "demoDataLoadFailed": "Failed to load demo data.",
+  "demoDataClearFailed": "Failed to clear demo data.",
+  "configSaveFailed": "Failed to save demo configuration."
+}

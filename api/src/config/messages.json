@@ -1,0 +1,51 @@
+{
+  "success": {
+    "dbConnected": "Database connection successful.",
+    "dbCreated": "Database created successfully.",
+    "schemaCreated": "Database schema created successfully.",
+    "defaultDataLoaded": "Default data loaded successfully.",
+    "defaultDataCleaned": "Default data cleaned successfully.",
+    "dbWiped": "All database tables dropped successfully. Database is now empty.",
+    "configSaved": "Configuration saved successfully.",
+    "moduleInstalled": "Module installed successfully.",
+    "moduleEnabled": "Module enabled successfully.",
+    "moduleDisabled": "Module disabled successfully.",
+    "moduleRemoved": "Module removed successfully.",
+    "schemaInitialized": "Module schema initialized successfully.",
+    "authLoginSuccess": "User authenticated successfully.",
+    "authLogoutSuccess": "User logged out successfully.",
+    "authTokenRefreshed": "Access token refreshed successfully."
+  },
+  "errors": {
+    "dbConnectionFailed": "Database connection failed. Check your connection settings.",
+    "dbCreateFailed": "Failed to create database.",
+    "schemaInitFailed": "Schema initialization failed.",
+    "dbInitFailed": "Database initialization failed. Check server logs.",
+    "dbWipeFailed": "Database wipe failed. Check server logs.",
+    "configSaveFailed": "Failed to save configuration.",
+    "moduleNotFound": "Module not found.",
+    "moduleAlreadyInstalled": "Module is already installed.",
+    "moduleInstallFailed": "Module installation failed.",
+    "coreModuleCannotDisable": "Core modules cannot be disabled.",
+    "coreModuleCannotRemove": "Core modules cannot be removed.",
+    "schemaNotInitialized": "Database schema is not initialized.",
+    "authCredentialsRequired": "Email and password are required.",
+    "authInvalidCredentials": "Invalid email or password.",
+    "authAccountInactive": "Account is not active. Contact administrator.",
+    "authLoginFailed": "Login failed. Please try again.",
+    "authTokenMissing": "Authentication required. Provide a Bearer token.",
+    "authTokenInvalid": "Invalid authentication token.",
+    "authTokenExpired": "Token expired. Please login again.",
+    "authRefreshTokenRequired": "Refresh token is required.",
+    "authRefreshInvalid": "Invalid or expired refresh token.",
+    "authUserNotFound": "User not found.",
+    "authForbidden": "Insufficient permissions for this action.",
+    "rateLimitExceeded": "Too many requests. Please try again later.",
+    "authRateLimitExceeded": "Too many login attempts. Please try again later."
+  },
+  "info": {
+    "serverStarted": "PulseOps V1 API started on port {port}",
+    "serverShutdown": "Server shutting down gracefully...",
+    "databasePoolClosed": "Database pool closed."
+  }
+}

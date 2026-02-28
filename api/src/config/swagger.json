@@ -1,0 +1,477 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PulseOps V1 API",
+    "description": "Enterprise Modular Operations Platform — Backend API with hot-drop module architecture, JWT authentication, and role-based access control.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "PulseOps Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4001/api",
+      "description": "Local Development"
+    }
+  ],
+  "tags": [
+    { "name": "Health", "description": "Health and readiness probes" },
+    { "name": "Auth", "description": "Authentication — login, refresh, logout" },
+    { "name": "Database", "description": "Database management — schema, data, stats" },
+    { "name": "Modules", "description": "Module management — install, enable, disable, remove" },
+    { "name": "Config", "description": "System configuration key/value store" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token obtained from POST /auth/login"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": { "type": "object" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": { "type": "string" }
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "admin@test.com" },
+          "password": { "type": "string", "example": "Infosys@123" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": {
+            "type": "object",
+            "properties": {
+              "accessToken": { "type": "string" },
+              "refreshToken": { "type": "string" },
+              "expiresIn": { "type": "integer", "example": 86400 },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "email": { "type": "string" },
+                  "name": { "type": "string" },
+                  "role": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ConfigEntry": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "value": { "type": "object" },
+          "description": { "type": "string" }
+        }
+      },
+      "ModuleInfo": {
+        "type": "object",
+        "properties": {
+          "moduleId": { "type": "string" },
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "description": { "type": "string" },
+          "isCore": { "type": "boolean" },
+          "enabled": { "type": "boolean" },
+          "order": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Basic health check",
+        "responses": {
+          "200": {
+            "description": "Service is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "service": { "type": "string", "example": "pulseops-v1-api" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/liveness": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Kubernetes liveness probe",
+        "responses": { "200": { "description": "Service is alive" } }
+      }
+    },
+    "/health/readiness": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Kubernetes readiness probe (checks DB)",
+        "responses": {
+          "200": { "description": "Service is ready" },
+          "503": { "description": "Database not connected" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login and get JWT tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" },
+          "429": { "description": "Too many login attempts" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh access token",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refreshToken"],
+                "properties": {
+                  "refreshToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "New access token issued" },
+          "401": { "description": "Invalid or expired refresh token" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout and invalidate session",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current user profile",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User profile returned" },
+          "401": { "description": "Not authenticated" }
+        }
+      }
+    },
+    "/database/create-database": {
+      "post": {
+        "tags": ["Database"],
+        "summary": "Create the application database if it does not exist",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Database created or already exists" },
+          "500": { "description": "Creation failed" }
+        }
+      }
+    },
+    "/database/test-connection": {
+      "get": {
+        "tags": ["Database"],
+        "summary": "Test database connection using server config",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Connection successful with latency" },
+          "500": { "description": "Connection failed" }
+        }
+      }
+    },
+    "/database/schema-status": {
+      "get": {
+        "tags": ["Database"],
+        "summary": "Check schema initialization status",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Schema status returned" }
+        }
+      }
+    },
+    "/database/create-schema": {
+      "post": {
+        "tags": ["Database"],
+        "summary": "Create core schema and tables",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Schema created successfully" },
+          "500": { "description": "Schema creation failed" }
+        }
+      }
+    },
+    "/database/load-default-data": {
+      "post": {
+        "tags": ["Database"],
+        "summary": "Seed default admin user and core module",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Default data loaded" },
+          "500": { "description": "Seeding failed" }
+        }
+      },
+      "delete": {
+        "tags": ["Database"],
+        "summary": "Clean default seeded data",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Default data cleaned" },
+          "500": { "description": "Clean failed" }
+        }
+      }
+    },
+    "/database/wipe": {
+      "post": {
+        "tags": ["Database"],
+        "summary": "Drop entire schema (DESTRUCTIVE!)",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Database wiped" },
+          "500": { "description": "Wipe failed" }
+        }
+      }
+    },
+    "/database/stats": {
+      "get": {
+        "tags": ["Database"],
+        "summary": "Get table sizes and counts",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Stats returned" }
+        }
+      }
+    },
+    "/modules": {
+      "get": {
+        "tags": ["Modules"],
+        "summary": "List all installed modules",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of installed modules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ModuleInfo" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/modules/available": {
+      "get": {
+        "tags": ["Modules"],
+        "summary": "Discover available hot-drop modules from dist-modules/ folder",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of available modules from hot-drop folder" }
+        }
+      }
+    },
+    "/modules/{moduleId}": {
+      "get": {
+        "tags": ["Modules"],
+        "summary": "Get a single module by ID",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "moduleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Module details" },
+          "404": { "description": "Module not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Modules"],
+        "summary": "Remove an installed module",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "moduleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Module removed" },
+          "400": { "description": "Cannot remove core module" }
+        }
+      }
+    },
+    "/modules/{moduleId}/install": {
+      "post": {
+        "tags": ["Modules"],
+        "summary": "Install a module from the available list",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "moduleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Module installed" },
+          "409": { "description": "Module already installed" }
+        }
+      }
+    },
+    "/modules/{moduleId}/enable": {
+      "post": {
+        "tags": ["Modules"],
+        "summary": "Enable an installed module",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "moduleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Module enabled" }
+        }
+      }
+    },
+    "/modules/{moduleId}/disable": {
+      "post": {
+        "tags": ["Modules"],
+        "summary": "Disable an installed module",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "moduleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Module disabled" },
+          "400": { "description": "Cannot disable core module" }
+        }
+      }
+    },
+    "/modules/bundle/{moduleId}/manifest.js": {
+      "get": {
+        "tags": ["Modules"],
+        "summary": "Serve built module manifest (ES module bundle for hot-drop)",
+        "parameters": [
+          { "name": "moduleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "JavaScript ES module bundle", "content": { "application/javascript": {} } },
+          "404": { "description": "Module manifest not found" }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "tags": ["Config"],
+        "summary": "List all configuration entries",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of config entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ConfigEntry" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Config"],
+        "summary": "Create or update a configuration entry",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ConfigEntry" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Config saved" },
+          "400": { "description": "Key is required" }
+        }
+      }
+    },
+    "/config/{key}": {
+      "get": {
+        "tags": ["Config"],
+        "summary": "Get a specific configuration entry",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Config entry" },
+          "404": { "description": "Config not found" }
+        }
+      }
+    }
+  }
+}

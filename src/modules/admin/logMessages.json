@@ -1,0 +1,18 @@
+{
+  "dashboardLoaded": "Admin dashboard loaded",
+  "dashboardRefreshed": "Admin dashboard data refreshed",
+  "healthCheckStarted": "System health check started",
+  "healthCheckCompleted": "System health check completed",
+  "healthCheckFailed": "System health check failed",
+  "moduleManagerOpened": "Module manager opened",
+  "moduleInstalled": "Module installed via manager",
+  "moduleEnabled": "Module enabled via manager",
+  "moduleDisabled": "Module disabled via manager",
+  "moduleRemoved": "Module removed via manager",
+  "settingsOpened": "Admin settings opened",
+  "settingsSaved": "Admin settings saved",
+  "dbConfigSaved": "Database configuration saved",
+  "dbSchemaInitialized": "Database schema initialized from admin",
+  "dbDataLoaded": "Default data loaded from admin",
+  "dbWiped": "Database wiped from admin"
+}

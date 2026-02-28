@@ -1,0 +1,14 @@
+{
+  "dashboardLoaded": "Logging dashboard loaded",
+  "dashboardRefreshed": "Logging dashboard data refreshed",
+  "systemLogsViewed": "System logs viewed",
+  "apiLogsViewed": "API logs viewed",
+  "queryExecuted": "Log query executed",
+  "logsExported": "Logs exported",
+  "configSaved": "Logging configuration saved",
+  "retentionPolicySaved": "Log retention policy saved",
+  "outputConfigSaved": "Log output targets saved",
+  "bufferFlushed": "Log buffer manually flushed",
+  "bufferCleared": "Log buffer cleared",
+  "retentionCleanup": "Log retention cleanup executed"
+}

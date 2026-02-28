@@ -1,0 +1,30 @@
+{
+  "appName": "PulseOps",
+  "appVersion": "1.0.0",
+  "appDescription": "Enterprise Modular Operations Platform",
+  "appTagline": "Plug-and-Play Module Architecture",
+  "company": "Knowvana",
+  "environment": "development",
+  "platform": {
+    "framework": "React 18 + Vite 5",
+    "uiLibrary": "Tailwind CSS 3",
+    "backend": "Express + Sequelize ORM",
+    "database": "PostgreSQL 16",
+    "icons": "Lucide React",
+    "architecture": "Modular Plug-and-Play"
+  },
+  "defaults": {
+    "pageSize": 25,
+    "maxPageSize": 100,
+    "dateFormat": "YYYY-MM-DD",
+    "timeFormat": "HH:mm:ss",
+    "timezone": "Asia/Kolkata",
+    "locale": "en-IN"
+  },
+  "moduleContract": {
+    "requiredFields": ["id", "name", "version", "description", "icon", "defaultView", "navItems", "getViews"],
+    "optionalFields": ["roles", "order", "isCore", "getConfigTabs", "getSettingsTabs", "ViewWrapper"],
+    "mandatoryNavItems": ["dashboard", "config"],
+    "mandatoryFiles": ["manifest.jsx", "constants.json", "uiText.json", "logMessages.json", "errorMessages.json"]
+  }
+}

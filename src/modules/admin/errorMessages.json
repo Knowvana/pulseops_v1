@@ -1,0 +1,13 @@
+{
+  "healthCheckFailed": "Failed to check system health. Please try again.",
+  "dashboardLoadFailed": "Failed to load dashboard data.",
+  "moduleInstallFailed": "Failed to install module: {reason}",
+  "moduleEnableFailed": "Failed to enable module. Ensure schema is initialized.",
+  "moduleDisableFailed": "Failed to disable module.",
+  "moduleRemoveFailed": "Failed to remove module.",
+  "settingsSaveFailed": "Failed to save settings. Please try again.",
+  "dbConfigSaveFailed": "Failed to save database configuration.",
+  "dbSchemaFailed": "Failed to initialize database schema.",
+  "dbDataLoadFailed": "Failed to load default data.",
+  "dbWipeFailed": "Failed to wipe database."
+}

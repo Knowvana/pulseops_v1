@@ -1,0 +1,102 @@
+{
+  "sideNav": {
+    "title": "Logging",
+    "subtitle": "Global Log Management"
+  },
+  "navItems": {
+    "dashboard": "Dashboard",
+    "systemLogs": "System Logs",
+    "apiLogs": "API Logs",
+    "query": "Log Query",
+    "config": "Configuration"
+  },
+  "dashboard": {
+    "pageTitle": "Logging Dashboard",
+    "subtitle": "Global log monitoring, buffer status, and log level distribution",
+    "tiles": {
+      "systemLogs": { "label": "System Logs", "detail": "In buffer" },
+      "apiLogs": { "label": "API Logs", "detail": "In buffer" },
+      "logLevel": { "label": "Min Log Level", "detail": "Current threshold" },
+      "synced": { "label": "Synced to DB", "detail": "Last flush status" },
+      "retention": { "label": "Retention", "detail": "Days before cleanup" },
+      "bufferUsage": { "label": "Buffer Usage", "detail": "Current vs max" }
+    }
+  },
+  "systemLogs": {
+    "pageTitle": "System Logs",
+    "subtitle": "Browse and filter system-level log entries",
+    "columns": {
+      "timestamp": "Timestamp",
+      "level": "Level",
+      "source": "Source",
+      "event": "Event",
+      "message": "Message",
+      "user": "User"
+    }
+  },
+  "apiLogs": {
+    "pageTitle": "API Call Logs",
+    "subtitle": "Browse and filter API request/response logs",
+    "columns": {
+      "timestamp": "Timestamp",
+      "method": "Method",
+      "path": "Path",
+      "status": "Status",
+      "duration": "Duration",
+      "user": "User"
+    }
+  },
+  "query": {
+    "pageTitle": "Log Query",
+    "subtitle": "Search and filter logs across all sources and levels",
+    "searchPlaceholder": "Search log messages...",
+    "filters": {
+      "level": "Level",
+      "source": "Source",
+      "dateRange": "Date Range",
+      "user": "User"
+    },
+    "exportButton": "Export",
+    "clearButton": "Clear Filters",
+    "noResults": "No logs match the current filters"
+  },
+  "config": {
+    "pageTitle": "Logging Configuration",
+    "pageSubtitle": "Configure global logging behavior for all modules and the platform",
+    "tabs": {
+      "general": "General",
+      "retention": "Retention",
+      "output": "Output Targets"
+    },
+    "general": {
+      "title": "General Logging Settings",
+      "description": "Control log level threshold, buffer sizes, and console output",
+      "minLevel": "Minimum Log Level",
+      "maxBufferSize": "Max Buffer Size",
+      "consoleOutput": "Enable Console Output",
+      "captureApiCalls": "Capture API Call Logs",
+      "captureTimestamps": "Include Timestamps",
+      "syncLimit": "Auto-Flush Threshold",
+      "flushInterval": "Flush Interval (ms)"
+    },
+    "retention": {
+      "title": "Log Retention Policy",
+      "description": "Configure how long logs are kept before automatic cleanup",
+      "retentionDays": "Retention Period (days)",
+      "maxStoredLogs": "Max Stored Logs",
+      "autoCleanup": "Enable Auto-Cleanup",
+      "cleanupSchedule": "Cleanup Schedule"
+    },
+    "output": {
+      "title": "Output Targets",
+      "description": "Configure where logs are sent — database, console, external services",
+      "database": "Write to Database",
+      "console": "Write to Console",
+      "external": "External Log Service",
+      "externalUrl": "External Service URL",
+      "externalUrlPlaceholder": "https://logs.example.com/ingest"
+    },
+    "saveButton": "Save Configuration",
+    "saved": "Configuration saved"
+  }
+}

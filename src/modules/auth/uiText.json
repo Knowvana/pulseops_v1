@@ -1,0 +1,153 @@
+{
+  "sideNav": {
+    "title": "Authentication",
+    "subtitle": "Security & Access"
+  },
+  "navItems": {
+    "dashboard": "Dashboard",
+    "users": "User Management",
+    "roles": "Roles & Permissions",
+    "sessions": "Active Sessions",
+    "auditLog": "Audit Log",
+    "config": "Configuration"
+  },
+  "dashboard": {
+    "pageTitle": "Authentication Dashboard",
+    "subtitle": "Monitor authentication health, active sessions, and security events",
+    "tiles": {
+      "totalUsers": { "label": "Total Users", "detail": "Registered accounts" },
+      "activeSessions": { "label": "Active Sessions", "detail": "Currently logged in" },
+      "failedLogins": { "label": "Failed Logins", "detail": "Last 24 hours" },
+      "lockedAccounts": { "label": "Locked Accounts", "detail": "Due to failed attempts" },
+      "authMethod": { "label": "Auth Method", "detail": "Current provider" },
+      "tokenHealth": { "label": "Token Health", "detail": "JWT validation status" }
+    }
+  },
+  "users": {
+    "pageTitle": "User Management",
+    "subtitle": "Create, edit, and manage user accounts",
+    "addButton": "Add User",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "lastLogin": "Last Login",
+      "actions": "Actions"
+    },
+    "form": {
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Enter full name",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "user@example.com",
+      "roleLabel": "Role",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "statusLabel": "Account Status",
+      "saveButton": "Save User",
+      "cancelButton": "Cancel"
+    }
+  },
+  "roles": {
+    "pageTitle": "Roles & Permissions",
+    "subtitle": "Define role-based access control policies",
+    "roles": {
+      "super_admin": { "label": "Super Admin", "description": "Full platform access, can manage all modules and users" },
+      "admin": { "label": "Admin", "description": "Module management, user management, settings access" },
+      "manager": { "label": "Manager", "description": "Module access with configuration capabilities" },
+      "user": { "label": "User", "description": "Standard module access, read and write" },
+      "viewer": { "label": "Viewer", "description": "Read-only access to assigned modules" }
+    }
+  },
+  "sessions": {
+    "pageTitle": "Active Sessions",
+    "subtitle": "View and manage active user sessions across the platform",
+    "columns": {
+      "user": "User",
+      "ip": "IP Address",
+      "device": "Device",
+      "loginTime": "Login Time",
+      "lastActivity": "Last Activity",
+      "actions": "Actions"
+    },
+    "revokeButton": "Revoke",
+    "revokeAllButton": "Revoke All Sessions"
+  },
+  "auditLog": {
+    "pageTitle": "Authentication Audit Log",
+    "subtitle": "Track all authentication events — logins, logouts, failures, and changes",
+    "columns": {
+      "timestamp": "Timestamp",
+      "event": "Event",
+      "user": "User",
+      "ip": "IP Address",
+      "result": "Result",
+      "details": "Details"
+    },
+    "events": {
+      "login_success": "Login Success",
+      "login_failed": "Login Failed",
+      "logout": "Logout",
+      "password_changed": "Password Changed",
+      "account_locked": "Account Locked",
+      "account_unlocked": "Account Unlocked",
+      "role_changed": "Role Changed",
+      "session_revoked": "Session Revoked"
+    }
+  },
+  "config": {
+    "pageTitle": "Authentication Configuration",
+    "pageSubtitle": "Configure authentication providers, password policies, and session settings",
+    "tabs": {
+      "provider": "Auth Provider",
+      "password": "Password Policy",
+      "session": "Session Policy",
+      "lockout": "Lockout Policy",
+      "tokens": "Token Settings"
+    },
+    "provider": {
+      "title": "Authentication Provider",
+      "description": "Configure the primary authentication method for the platform",
+      "local": "Local Database",
+      "localDescription": "Users authenticate against the PostgreSQL users table with bcrypt hashing",
+      "ldap": "LDAP / Active Directory",
+      "ldapDescription": "Authenticate against an enterprise LDAP or AD server",
+      "currentBadge": "Active"
+    },
+    "password": {
+      "title": "Password Policy",
+      "description": "Enforce password strength requirements across all user accounts",
+      "minLength": "Minimum Length",
+      "requireUppercase": "Require Uppercase Letter",
+      "requireLowercase": "Require Lowercase Letter",
+      "requireNumber": "Require Number",
+      "requireSpecial": "Require Special Character",
+      "maxAge": "Max Password Age (days)",
+      "historyCount": "Password History (prevent reuse)"
+    },
+    "session": {
+      "title": "Session Policy",
+      "description": "Control session duration and concurrent login limits",
+      "maxConcurrent": "Max Concurrent Sessions",
+      "sessionTimeout": "Session Timeout (minutes)",
+      "idleTimeout": "Idle Timeout (minutes)",
+      "rememberMe": "Remember Me Duration (days)"
+    },
+    "lockout": {
+      "title": "Account Lockout Policy",
+      "description": "Protect against brute-force attacks by locking accounts after failed attempts",
+      "maxAttempts": "Max Failed Attempts",
+      "lockoutDuration": "Lockout Duration (minutes)",
+      "resetCounter": "Reset Counter After (minutes)"
+    },
+    "tokens": {
+      "title": "Token Settings",
+      "description": "Configure JWT token expiry and refresh token rotation",
+      "accessExpiry": "Access Token Expiry (minutes)",
+      "refreshExpiry": "Refresh Token Expiry (days)",
+      "rotateRefresh": "Rotate Refresh Tokens"
+    },
+    "saveButton": "Save Configuration",
+    "saved": "Configuration saved successfully"
+  }
+}
