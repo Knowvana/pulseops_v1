@@ -57,10 +57,10 @@ const apiManagerManifest = {
 
   // ── View renderer ───────────────────────────────────────────────────────
   getViews: () => ({
-    dashboard: <ApiManagerDashboard />,
-    endpoints: <PlaceholderView title={uiText.endpoints.pageTitle} subtitle={uiText.endpoints.subtitle} icon={Workflow} />,
-    testing: <PlaceholderView title={uiText.testing.pageTitle} subtitle={uiText.testing.subtitle} icon={TestTube} />,
-    health: <PlaceholderView title={uiText.health.pageTitle} subtitle={uiText.health.subtitle} icon={HeartPulse} />,
+    dashboard: ApiManagerDashboard,
+    endpoints: () => <PlaceholderView title={uiText.endpoints.pageTitle} subtitle={uiText.endpoints.subtitle} icon={Workflow} />,
+    testing: () => <PlaceholderView title={uiText.testing.pageTitle} subtitle={uiText.testing.subtitle} icon={TestTube} />,
+    health: () => <PlaceholderView title={uiText.health.pageTitle} subtitle={uiText.health.subtitle} icon={HeartPulse} />,
   }),
 
   // ── Config tabs (rendered when activeView === 'config') ─────────────────

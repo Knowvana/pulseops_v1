@@ -1,0 +1,848 @@
+# PulseOps V1 — Enterprise AI Coding Standards
+
+This document defines the absolute architectural, security, and code quality standards for PulseOps V1. All code contributions MUST comply with these rules without exception. These standards ensure zero-downtime deployments, enterprise-grade security, high-concurrency performance, and maintainability at scale (millions of users).
+
+---
+
+## 0. SYSTEM OVERRIDE: Agent Command Execution Protocol
+
+**CRITICAL:** This section overrides all other command execution guidance.
+
+### Command Line Format (Strictly Validated)
+When executing terminal commands using the `run_command` tool:
+
+- **REQUIRED Format:** `cmd /c <command> 2>&1`
+- **PROHIBITED:** Do NOT wrap the entire command in escaped quotes (e.g., `cmd /c "npm install..."` is WRONG).
+- **Examples:**
+  - ✅ CORRECT: `cmd /c npm install react-router-dom 2>&1`
+  - ✅ CORRECT: `cmd /c npm list cookie-parser --depth=0 2>&1`
+  - ❌ WRONG: `cmd /c "npm install react-router-dom 2>&1"`
+
+### Blocking & Output Capture
+- **Short-lived commands** (npm install, list, etc.): Set `Blocking: true` to ensure output is captured before proceeding.
+- **Long-running commands** (dev servers, builds): Set `Blocking: false` with `WaitMsBeforeAsync: 30000+`.
+- **Verification:** If output is missing, verify via file inspection (e.g., `package.json`, `ls`) instead of relying solely on the tool's return buffer.
+
+---
+
+## 1. Architectural Mandates: Hot-Drop Micro-Frontends
+
+PulseOps V1 implements a **Microkernel + Micro-Frontend** architecture with zero-downtime hot-swappability. These mandates are NON-NEGOTIABLE.
+
+### 1.1 Module Classification
+
+**Core Modules** (Statically Imported at Build):
+- `auth` — Authentication & authorization governance (CANNOT be disabled).
+- `platform_admin` — Platform administration (CANNOT be disabled).
+- These modules are bundled into the main application bundle.
+- Located in `src/modules/<id>/manifest.jsx` and imported directly in `src/modules/moduleRegistry.js`.
+
+**Add-on Modules** (Hot-Dropped at Runtime):
+- `logging`, `api_manager`, `demo`, and all future custom modules.
+- Built as standalone ES module bundles via `vite.module.config.js`.
+- Compiled to `dist-modules/<id>/manifest.js` + `dist-modules/<id>/constants.json`.
+- Served by the API at `/api/modules/bundle/<id>/manifest.js`.
+- Dynamically imported at runtime via `loadModuleManifest(moduleId)` in `moduleRegistry.js`.
+
+### 1.2 Dependency Sharing (CRITICAL for Stability)
+
+**External Dependencies in Vite Module Builds:**
+- React, ReactDOM, and all `@shared` library imports MUST be marked as `external` in `vite.module.config.js`.
+- This prevents multiple instances of React or shared utilities from being bundled, which causes state corruption and crashes.
+
+**Import Map Resolution:**
+- The host application (`src/main.jsx`) MUST use an ES `<script type="importmap">` to resolve shared dependencies at runtime.
+- Example:
+  ```html
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom": "https://esm.sh/react-dom@18.2.0",
+      "@shared": "/src/shared/index.js"
+    }
+  }
+  </script>
+  ```
+
+### 1.3 Cache Busting (MANDATORY)
+
+All frontend dynamic imports MUST append a version or content-hash query parameter:
+```javascript
+const hotDropUrl = `${base}${urls.modulesBundle}/${moduleId}/manifest.js?v=${version}`;
+const mod = await import(/* @vite-ignore */ hotDropUrl);
+```
+
+**Rationale:** Ensures browsers immediately fetch the latest hot-dropped code instead of serving stale cached modules.
+
+### 1.4 Zero Hardcoding of UI Text, Logs, and URLs
+
+**PROHIBITED:**
+- Hardcoded UI strings in components.
+- Hardcoded log messages in services.
+- Hardcoded error messages in middleware.
+- Hardcoded API URLs in code.
+
+**REQUIRED:**
+- **UI Text:** `src/modules/<id>/uiText.json` (imported as `import uiText from '@modules/<id>/uiText.json'`).
+- **Log Messages:** `src/shared/config/logMessages.json` (imported as `import logMessages from '@shared/config/logMessages.json'`).
+- **Error Messages:** `src/shared/config/errorMessages.json` (imported as `import errorMessages from '@shared/config/errorMessages.json'`).
+- **URLs:** `src/shared/config/urls.json` (imported as `import urls from '@shared/config/urls.json'`).
+- **Module Metadata:** `src/modules/<id>/constants.json` (imported as `import moduleConstants from '@modules/<id>/constants.json'`).
+
+### 1.5 Module Manifest Contract (STRICT)
+
+Every module MUST export a manifest object with these fields:
+
+**REQUIRED:**
+- `id` — Unique module identifier (e.g., `'auth'`, `'logging'`).
+- `name` — Display name for UI (e.g., `'Authentication'`).
+- `version` — Semantic version string (e.g., `'1.0.0'`).
+- `description` — Human-readable description.
+- `icon` — Lucide React icon component.
+- `defaultView` — Default view ID to show on module load (e.g., `'dashboard'`).
+- `navItems` — Array of `{ id, label, icon }` for the left sidebar. MUST include `'dashboard'` and `'config'`.
+- `getViews()` — Function returning `{ viewId: ComponentReference }` map (NOT JSX elements).
+
+**OPTIONAL:**
+- `roles` — Array of allowed roles (e.g., `['super_admin', 'admin']`).
+- `order` — Sort order in top navigation (lower = left).
+- `isCore` — Boolean; `true` for core modules (cannot be disabled).
+- `getConfigTabs()` — Function returning config tabs array.
+- `getSettingsTabs()` — Function returning settings tabs array.
+- `ViewWrapper` — Optional wrapper component for all views.
+
+**METADATA SOURCE:**
+- All metadata fields (`id`, `name`, `version`, `description`, `roles`, `order`, `isCore`, `defaultView`) MUST originate exclusively from `@modules/<id>/constants.json`.
+- Only `icon`, `navItems`, `getViews`, `getConfigTabs`, `getSettingsTabs`, and `ViewWrapper` remain in `manifest.jsx`.
+
+---
+
+## 2. Enterprise Node.js Backend Rules (Scale & Security)
+
+### 2.1 Dual-Authentication Protocol (MANDATORY)
+
+The API MUST support two authentication methods simultaneously:
+
+**1. HttpOnly Cookies (Primary for React Frontend):**
+- Set on login via `res.cookie('accessToken', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })`.
+- Automatically sent by browsers in all cross-origin requests when CORS `credentials: true` is set.
+- Prevents XSS attacks (JavaScript cannot access HttpOnly cookies).
+
+**2. Authorization Header (Secondary for Swagger/Postman/Programmatic Clients):**
+- Format: `Authorization: Bearer <token>`.
+- Allows API testing tools and external integrations to authenticate.
+
+**Implementation in `authenticate` Middleware:**
+```javascript
+export function authenticate(req, res, next) {
+  let token = null;
+  
+  // 1. Check Authorization Header (Bearer) - For Swagger/Postman
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } 
+  // 2. Fallback to HttpOnly Cookie - For Frontend
+  else if (req.cookies && req.cookies.accessToken) {
+    token = req.cookies.accessToken;
+  }
+  
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: { message: 'Authentication required.' },
+    });
+  }
+  
+  try {
+    const decoded = verifyAccessToken(token);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      error: { message: 'Invalid or expired token.' },
+    });
+  }
+}
+```
+
+### 2.2 Cookie Security (STRICT)
+
+When setting JWT cookies, ALWAYS use:
+```javascript
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: expiresInSeconds * 1000,
+};
+res.cookie('accessToken', accessToken, cookieOptions);
+res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+```
+
+**Rationale:**
+- `httpOnly: true` — Prevents JavaScript from accessing the token (XSS protection).
+- `secure: true` (production only) — Ensures cookies are only sent over HTTPS.
+- `sameSite: 'lax'` — Prevents CSRF attacks while allowing same-site navigation.
+
+### 2.3 CORS Configuration (MANDATORY)
+
+CORS MUST be configured with `credentials: true` to allow cookies:
+```javascript
+app.use(cors({
+  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+```
+
+### 2.4 CDN Readiness
+
+The API MUST construct module asset URLs assuming they will eventually be served by an external CDN:
+```javascript
+const cdnBaseUrl = process.env.CDN_BASE_URL || '/api/modules/bundle';
+const moduleUrl = `${cdnBaseUrl}/${moduleId}/manifest.js?v=${moduleVersion}`;
+```
+
+This allows seamless migration to a CDN (e.g., CloudFront, Cloudflare) without code changes.
+
+### 2.5 Database & Caching Strategy
+
+**Database Access:**
+- Centralize ALL database queries via `DatabaseService.query()` using parameterized queries.
+- NEVER construct SQL strings with string concatenation or template literals.
+- Example:
+  ```javascript
+  const result = await DatabaseService.query(
+    `SELECT * FROM ${schema}.system_users WHERE id = $1 AND status = $2`,
+    [userId, 'active']
+  );
+  ```
+
+**Connection Pooling:**
+- Assume a network-level connection pooler (e.g., PgBouncer) is in front of PostgreSQL.
+- Configure pool size conservatively (e.g., 10-20 connections per API instance).
+
+**Caching Layer (REQUIRED for Scale):**
+- Mandate a Redis caching layer for read-heavy, infrequently changing data:
+  - Module Registry (modules list, manifests).
+  - System configuration (auth provider, feature flags).
+  - User roles and permissions.
+- Use a TTL of 5-15 minutes for cached data.
+- Implement cache invalidation on write operations.
+
+### 2.6 Hot-Drop Module Security (Zero Trust)
+
+The module scanner MUST verify a checksum or digital signature before registering a new module:
+```javascript
+async function loadModuleManifest(moduleId) {
+  // ... fetch manifest from /api/modules/bundle/${moduleId}/manifest.js
+  
+  // REQUIRED: Verify checksum or signature
+  const expectedChecksum = await getExpectedChecksum(moduleId);
+  const actualChecksum = crypto.createHash('sha256').update(manifestCode).digest('hex');
+  
+  if (actualChecksum !== expectedChecksum) {
+    console.error(`[ModuleRegistry] Checksum mismatch for module '${moduleId}'. Possible tampering.`);
+    return null; // Reject the module
+  }
+  
+  registerDynamicManifest(manifest);
+  return manifest;
+}
+```
+
+**Rationale:** Prevents Remote Code Execution (RCE) and XSS injection attacks via malicious modules.
+
+### 2.7 Security Middleware Chain (MANDATORY ORDER)
+
+The middleware chain MUST be applied in this exact order:
+1. **Helmet.js** — HTTP security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options).
+2. **Request ID** — UUID per request for distributed tracing.
+3. **CORS** — Cross-origin resource sharing with `credentials: true`.
+4. **Rate Limiting** — General (100 req/15min) + Auth-specific (10 req/15min).
+5. **Cookie Parser** — Parse HttpOnly cookies.
+6. **JSON Body Parser** — Parse JSON payloads (limit: 10MB).
+7. **Input Sanitization** — Strip XSS patterns from query params and body.
+8. **Request Logging** — Log all requests with Request ID.
+9. **Public Routes** — Health, auth/login, Swagger, module bundles.
+10. **JWT Authentication Gate** — Protect all other routes.
+11. **Protected Routes** — Database, modules, config, logs, users.
+12. **404 Handler** — Return 404 for unmatched routes.
+13. **Global Error Handler** — Centralized error handling with Request ID.
+
+### 2.8 Error Handling & Logging (CENTRALIZED)
+
+**Winston Logger Configuration:**
+- All logs MUST include the unique Request ID for distributed tracing.
+- Log levels: `error`, `warn`, `info`, `debug`.
+- Log format: `[RequestId] [Level] [Service] Message { context }`.
+
+**Error Response Format:**
+```javascript
+{
+  success: false,
+  error: {
+    message: "User-friendly error message",
+    code: "ERROR_CODE",
+    requestId: "uuid-here"
+  }
+}
+```
+
+**Centralized Error Handler:**
+```javascript
+app.use((err, req, res, _next) => {
+  logger.error('Unhandled error', {
+    error: err.message,
+    stack: err.stack,
+    requestId: req.requestId,
+  });
+  res.status(500).json({
+    success: false,
+    error: {
+      message: 'Internal server error',
+      requestId: req.requestId,
+    },
+  });
+});
+```
+
+---
+
+## 3. Enterprise React Frontend Rules
+
+### 3.1 Component Modularity (STRICT)
+
+**REQUIRED:**
+- All reusable UI components MUST live in `src/shared/components/`.
+- Import shared components via `import { ComponentName } from '@shared'`.
+- PROHIBITED: Duplicating component logic across modules.
+
+**Example:**
+```javascript
+// ✅ CORRECT
+import { Button, Card, Modal } from '@shared';
+
+// ❌ WRONG
+import Button from '../../../shared/components/Button';
+```
+
+### 3.2 Rendering Optimization (CRITICAL)
+
+**getViews() MUST Return Component References, NOT JSX Elements:**
+
+```javascript
+// ❌ WRONG (causes re-renders and state loss)
+getViews: ({ user, onNavigate }) => ({
+  dashboard: <AdminDashboard user={user} onNavigate={onNavigate} />,
+  settings: <AdminSettings user={user} />,
+})
+
+// ✅ CORRECT (preserves component state)
+getViews: () => ({
+  dashboard: AdminDashboard,
+  settings: AdminSettings,
+})
+
+// In PlatformDashboard.jsx:
+const ViewComponent = views[activeView];
+return <ViewComponent user={user} onNavigate={handleSideNavSelect} />;
+```
+
+**Rationale:** Returning JSX elements causes React to unmount and remount the component on every render, destroying local state. Returning component references allows React to preserve state across navigation.
+
+**Memoization (REQUIRED for Performance):**
+- Use `useMemo` for expensive computations.
+- Use `useCallback` for event handlers passed to child components.
+- Example:
+  ```javascript
+  const handleSwitchModule = useCallback((moduleId) => {
+    navigate(`/${moduleId}/${defaultView}`);
+  }, [navigate]);
+  ```
+
+### 3.3 State Management (LOCALIZED)
+
+**Local State:**
+- Keep component state as local as possible using `useState`.
+- Use `useReducer` for complex state machines.
+
+**Global State (React Context):**
+- ONLY for application-level state:
+  - Authentication state (user, token).
+  - Theme/locale settings.
+  - Global notifications.
+- PROHIBITED: Using Context for module-specific state.
+
+**URL State (MANDATORY):**
+- Use `react-router-dom` to store navigation state in the URL.
+- Example: `/:moduleId/:viewId` for module and view selection.
+- Enables deep linking and page refresh without losing state.
+
+### 3.4 Routing (URL-Driven)
+
+**REQUIRED:**
+- Wrap the authenticated UI in `<BrowserRouter>`.
+- Use `useNavigate()` and `useParams()` to sync state with URL.
+- Support deep linking (e.g., `/admin/moduleManager`).
+
+**Example:**
+```javascript
+import { useNavigate, useParams } from 'react-router-dom';
+
+function PlatformDashboard({ user, onLogout }) {
+  const navigate = useNavigate();
+  const { moduleId, viewId } = useParams();
+  
+  const handleSwitchModule = useCallback((id) => {
+    navigate(`/${id}/dashboard`);
+  }, [navigate]);
+  
+  return (
+    <AppShell>
+      {/* Content */}
+    </AppShell>
+  );
+}
+```
+
+---
+
+## 4. Strict Naming Conventions & Folder Structure
+
+### 4.1 File Naming
+
+**React Components:** `PascalCase.jsx`
+- Example: `AdminDashboard.jsx`, `UserProfile.jsx`, `SettingsModal.jsx`.
+
+**Backend Services, Utilities, Config:** `camelCase.js`
+- Example: `databaseService.js`, `authMiddleware.js`, `loadJson.js`.
+
+**JSON Config Files:** `camelCase.json`
+- Example: `constants.json`, `uiText.json`, `logMessages.json`, `urls.json`.
+
+### 4.2 Variable & Function Naming
+
+**camelCase (STRICT):**
+```javascript
+const userName = 'Alice';
+const isActive = true;
+const hasPermission = false;
+const shouldRender = true;
+
+function fetchUserData() { }
+function calculateTotal() { }
+```
+
+**Boolean Prefixes (MANDATORY):**
+- `is*` — State or condition (e.g., `isLoading`, `isAuthenticated`).
+- `has*` — Possession (e.g., `hasAccess`, `hasError`).
+- `should*` — Decision (e.g., `shouldRender`, `shouldRefresh`).
+
+### 4.3 Constants
+
+**UPPER_SNAKE_CASE (STRICT):**
+```javascript
+const MAX_RETRIES = 3;
+const DEFAULT_TIMEOUT_MS = 5000;
+const API_BASE_URL = 'https://api.example.com';
+const JWT_EXPIRES_IN = '24h';
+```
+
+### 4.4 Folder Structure (NON-NEGOTIABLE)
+
+```
+pulseops_v1/
+├── api/                          # Backend (Node.js + Express)
+│   ├── src/
+│   │   ├── app.js                # Express factory
+│   │   ├── server.js             # Entry point
+│   │   ├── config/
+│   │   │   ├── index.js          # Config loader
+│   │   │   ├── app.json          # App config
+│   │   │   ├── auth-provider.json
+│   │   │   └── users.json
+│   │   ├── core/
+│   │   │   ├── middleware/
+│   │   │   │   ├── auth.js       # JWT + Dual-Auth
+│   │   │   │   └── security.js   # Helmet, rate limiting
+│   │   │   ├── routes/
+│   │   │   │   ├── authRoutes.js
+│   │   │   │   ├── moduleRoutes.js
+│   │   │   │   └── ...
+│   │   │   └── database/
+│   │   │       └── databaseService.js
+│   │   └── shared/
+│   │       ├── logger.js
+│   │       └── loadJson.js
+│   └── package.json
+│
+├── src/                          # Frontend (React)
+│   ├── core/
+│   │   ├── App.jsx               # Root component
+│   │   ├── PlatformDashboard.jsx # Main authenticated UI
+│   │   └── auth/                 # Auth pages
+│   ├── modules/
+│   │   ├── moduleRegistry.js     # Module discovery
+│   │   ├── admin/
+│   │   │   ├── manifest.jsx
+│   │   │   ├── constants.json
+│   │   │   ├── uiText.json
+│   │   │   ├── components/
+│   │   │   └── ...
+│   │   ├── auth/
+│   │   ├── logging/
+│   │   ├── api_manager/
+│   │   └── demo/
+│   ├── shared/
+│   │   ├── components/           # Design system
+│   │   ├── services/
+│   │   ├── config/
+│   │   │   ├── constants.json
+│   │   │   ├── urls.json
+│   │   │   ├── logMessages.json
+│   │   │   └── errorMessages.json
+│   │   ├── contexts/
+│   │   ├── hooks/
+│   │   └── index.js              # Barrel export
+│   ├── index.css
+│   └── main.jsx
+│
+├── dist-modules/                 # Compiled hot-drop modules
+│   ├── logging/
+│   │   ├── manifest.js
+│   │   └── constants.json
+│   ├── api_manager/
+│   └── demo/
+│
+├── scripts/
+│   └── build-module.js           # Module build script
+│
+├── docs/
+│   └── memory.md                 # Architecture decisions
+│
+├── .windsurfrules                # THIS FILE
+├── .env.example
+├── package.json
+├── vite.config.js
+├── vite.module.config.js         # Module build config
+└── README.md
+```
+
+**PROHIBITED VIOLATIONS:**
+- Hardcoding paths (use aliases: `@shared`, `@modules`, `@core`).
+- Mixing backend and frontend code.
+- Placing module-specific code in `shared/`.
+- Importing from relative paths (always use aliases).
+
+---
+
+## 5. Documentation & Comments Standard
+
+### 5.1 File Headers (MANDATORY)
+
+Every file MUST have a top-level comment block:
+
+```javascript
+// ============================================================================
+// AdminDashboard — PulseOps V1 Admin Module
+//
+// PURPOSE: Main dashboard for platform administrators. Displays system
+// health, module status, and quick-access admin controls.
+//
+// ARCHITECTURE: React component exported from admin/manifest.jsx.
+// Receives props: { user, onNavigate, onModulesChanged }.
+//
+// DEPENDENCIES:
+//   - @shared → Card, Button, LoadingSpinner
+//   - @modules/admin/uiText.json → UI text
+//   - @modules/admin/services/adminService.js → Admin API calls
+// ============================================================================
+```
+
+### 5.2 JSDoc (COMPREHENSIVE)
+
+All functions, hooks, and services MUST include JSDoc:
+
+```javascript
+/**
+ * Authenticate a user via email and password.
+ * Calls POST /api/auth/login and stores the JWT in localStorage.
+ * 
+ * @param {string} email - User email address
+ * @param {string} password - User password (plaintext)
+ * @returns {Promise<Object>} User object { id, email, name, role }
+ * @throws {Error} If credentials are invalid or server error occurs
+ * 
+ * @example
+ * const user = await CoreAuthService.login('admin@test.com', 'password123');
+ * console.log(user.role); // 'super_admin'
+ */
+export async function login(email, password) {
+  // ...
+}
+```
+
+### 5.3 Inline Comments (EXPLAIN WHY, NOT WHAT)
+
+Complex logic MUST have inline comments explaining the *why*:
+
+```javascript
+// ❌ WRONG (explains what, not why)
+const token = authHeader.split(' ')[1]; // Extract token from header
+
+// ✅ CORRECT (explains why)
+// Check Bearer header first (for Swagger/Postman) before falling back to cookies.
+// This allows both frontend (cookie-based) and API testing tools (header-based) to work.
+const authHeader = req.headers.authorization;
+if (authHeader && authHeader.startsWith('Bearer ')) {
+  token = authHeader.split(' ')[1];
+}
+```
+
+**Areas Requiring Detailed Comments:**
+- Dynamic module resolution and hot-dropping.
+- Cryptographic checks and signature verification.
+- Dual-Auth flows and cookie handling.
+- URL routing and deep linking logic.
+- Cache invalidation strategies.
+- Error recovery and retry logic.
+
+---
+
+## 6. Security Mandates (ABSOLUTE)
+
+### 6.1 Input Validation & Sanitization
+
+**REQUIRED:**
+- Validate all user inputs on the backend (never trust frontend validation).
+- Sanitize inputs to prevent XSS, SQL injection, and command injection.
+- Use parameterized queries for all database operations.
+
+**Example:**
+```javascript
+// ❌ WRONG (SQL injection vulnerability)
+const query = `SELECT * FROM users WHERE email = '${email}'`;
+
+// ✅ CORRECT (parameterized query)
+const result = await DatabaseService.query(
+  'SELECT * FROM users WHERE email = $1',
+  [email]
+);
+```
+
+### 6.2 Secrets Management
+
+**PROHIBITED:**
+- Hardcoding API keys, JWT secrets, or database passwords in code.
+- Committing `.env` files to version control.
+
+**REQUIRED:**
+- Store all secrets in `.env` (local development) or environment variables (production).
+- Load secrets via `config/index.js` using `process.env`.
+- Example:
+  ```javascript
+  const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+  ```
+
+### 6.3 HTTPS & Secure Cookies
+
+**REQUIRED (Production):**
+- All API endpoints MUST be served over HTTPS.
+- Cookies MUST have `secure: true` in production.
+- HSTS header MUST be set via Helmet.js.
+
+### 6.4 Rate Limiting
+
+**REQUIRED:**
+- General endpoints: 100 requests per 15 minutes per IP.
+- Auth endpoints: 10 requests per 15 minutes per IP.
+- Implement via `express-rate-limit` middleware.
+
+### 6.5 CORS Whitelisting
+
+**REQUIRED:**
+- CORS MUST whitelist specific origins (not `*`).
+- Example:
+  ```javascript
+  cors({
+    origin: ['https://app.example.com', 'https://admin.example.com'],
+    credentials: true,
+  })
+  ```
+
+---
+
+## 7. Performance & Scalability Mandates
+
+### 7.1 Component Memoization
+
+**REQUIRED:**
+- Memoize expensive computations with `useMemo`.
+- Memoize event handlers with `useCallback`.
+- Prevent unnecessary re-renders of child components.
+
+### 7.2 Code Splitting & Lazy Loading
+
+**REQUIRED:**
+- Use `React.lazy()` for route-based code splitting.
+- Lazy-load modules via dynamic `import()`.
+- Example:
+  ```javascript
+  const AdminModule = React.lazy(() => import('@modules/admin/manifest.jsx'));
+  ```
+
+### 7.3 Database Query Optimization
+
+**REQUIRED:**
+- Use indexes on frequently queried columns.
+- Limit result sets (e.g., `LIMIT 100`).
+- Use `SELECT` specific columns, not `SELECT *`.
+- Implement pagination for large datasets.
+
+### 7.4 Caching Strategy
+
+**REQUIRED:**
+- Cache read-heavy, infrequently changing data in Redis.
+- Set appropriate TTLs (5-15 minutes for most data).
+- Implement cache invalidation on write operations.
+- Example:
+  ```javascript
+  const cacheKey = `modules:${moduleId}`;
+  let manifest = await redis.get(cacheKey);
+  if (!manifest) {
+    manifest = await loadModuleManifest(moduleId);
+    await redis.setex(cacheKey, 600, JSON.stringify(manifest)); // 10 min TTL
+  }
+  ```
+
+---
+
+## 8. Testing & Quality Assurance
+
+### 8.1 Unit Tests (REQUIRED)
+
+- Write unit tests for all business logic (services, utilities, middleware).
+- Use Jest or Vitest.
+- Aim for >80% code coverage.
+
+### 8.2 Integration Tests (REQUIRED)
+
+- Test API endpoints with realistic request/response flows.
+- Test authentication flows (login, refresh, logout).
+- Test module loading and hot-dropping.
+
+### 8.3 E2E Tests (RECOMMENDED)
+
+- Use Playwright or Cypress for critical user flows.
+- Test deep linking and URL routing.
+- Test module switching and navigation.
+
+---
+
+## 9. Deployment & DevOps
+
+### 9.1 Environment Configuration
+
+**REQUIRED:**
+- `.env.example` — Template with all required variables (no secrets).
+- `.env` (local) — Actual secrets for development (NEVER commit).
+- Environment variables (production) — Injected at runtime.
+
+### 9.2 Docker & Containerization
+
+**REQUIRED:**
+- Provide `Dockerfile` for both frontend and backend.
+- Use multi-stage builds to minimize image size.
+- Example:
+  ```dockerfile
+  FROM node:18-alpine AS builder
+  WORKDIR /app
+  COPY package*.json ./
+  RUN npm ci
+  COPY . .
+  RUN npm run build
+  
+  FROM node:18-alpine
+  WORKDIR /app
+  COPY --from=builder /app/dist ./dist
+  COPY --from=builder /app/node_modules ./node_modules
+  EXPOSE 4001
+  CMD ["node", "src/server.js"]
+  ```
+
+### 9.3 CI/CD Pipeline
+
+**REQUIRED:**
+- Automated tests on every commit.
+- Automated linting and code quality checks.
+- Automated builds and deployments.
+- Example (GitHub Actions):
+  ```yaml
+  name: CI/CD
+  on: [push, pull_request]
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+        - run: npm ci
+        - run: npm run lint
+        - run: npm test
+        - run: npm run build
+  ```
+
+---
+
+## 10. Code Review Checklist
+
+Before merging any code, verify:
+
+- [ ] **Architecture:** Does it follow the module/hot-drop pattern?
+- [ ] **Security:** Are inputs validated? Are secrets in `.env`? Are cookies secure?
+- [ ] **Performance:** Are components memoized? Is state local? Are queries optimized?
+- [ ] **Naming:** Are files, variables, and functions named correctly?
+- [ ] **Documentation:** Does the file have a header? Are functions JSDoc'd?
+- [ ] **Testing:** Are unit tests included? Is coverage >80%?
+- [ ] **Linting:** Does code pass ESLint?
+- [ ] **No Hardcoding:** Are all strings from JSON? All URLs from config?
+- [ ] **Imports:** Are all imports using aliases (`@shared`, `@modules`, `@core`)?
+- [ ] **Error Handling:** Are errors logged with Request ID? Are responses consistent?
+
+---
+
+## 11. Glossary & Key Terms
+
+- **Core Module:** Statically imported at build (auth, platform_admin). Cannot be disabled.
+- **Add-on Module:** Hot-dropped at runtime (logging, api_manager, demo). Can be enabled/disabled.
+- **Hot-Drop:** Dynamic loading of a module at runtime without rebuilding the app.
+- **Manifest:** Self-describing module contract (id, name, views, tabs, etc.).
+- **Dual-Auth:** Supporting both HttpOnly cookies (frontend) and Bearer headers (API tools).
+- **Deep Linking:** Ability to navigate directly to a specific URL (e.g., `/admin/moduleManager`).
+- **Cache Busting:** Appending version/hash to URLs to force fresh downloads.
+- **Request ID:** Unique UUID per request for distributed tracing and debugging.
+
+---
+
+## 12. Enforcement & Violations
+
+**Violations of these rules will result in:**
+1. Code review rejection.
+2. Mandatory refactoring before merge.
+3. Documentation of the violation in `docs/memory.md`.
+
+**Exceptions:**
+- NO exceptions to security mandates (Sections 2.1-2.8, 6.1-6.5).
+- NO exceptions to architectural mandates (Sections 1.1-1.5).
+- Minor exceptions to naming/structure may be approved by the Tech Lead with documented justification.
+
+---
+
+**Last Updated:** March 1, 2026  
+**Version:** 1.0.0  
+**Scope:** PulseOps V1 (All code in this repository)

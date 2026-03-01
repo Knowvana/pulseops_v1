@@ -66,11 +66,11 @@ const authManifest = {
 
   // ── View renderer ───────────────────────────────────────────────────────
   getViews: () => ({
-    dashboard: <AuthDashboard />,
-    users: <PlaceholderView title={uiText.users.pageTitle} subtitle={uiText.users.subtitle} icon={Users} />,
-    roles: <PlaceholderView title={uiText.roles.pageTitle} subtitle={uiText.roles.subtitle} icon={ShieldCheck} />,
-    sessions: <PlaceholderView title={uiText.sessions.pageTitle} subtitle={uiText.sessions.subtitle} icon={Clock} />,
-    auditLog: <PlaceholderView title={uiText.auditLog.pageTitle} subtitle={uiText.auditLog.subtitle} icon={ScrollText} />,
+    dashboard: AuthDashboard,
+    users: () => <PlaceholderView title={uiText.users.pageTitle} subtitle={uiText.users.subtitle} icon={Users} />,
+    roles: () => <PlaceholderView title={uiText.roles.pageTitle} subtitle={uiText.roles.subtitle} icon={ShieldCheck} />,
+    sessions: () => <PlaceholderView title={uiText.sessions.pageTitle} subtitle={uiText.sessions.subtitle} icon={Clock} />,
+    auditLog: () => <PlaceholderView title={uiText.auditLog.pageTitle} subtitle={uiText.auditLog.subtitle} icon={ScrollText} />,
   }),
 
   // ── Config tabs (rendered when activeView === 'config') ─────────────────

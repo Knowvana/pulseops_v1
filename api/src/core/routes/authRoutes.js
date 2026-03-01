@@ -282,6 +282,20 @@ router.post('/login', async (req, res) => {
     const accessToken = generateAccessToken(result.user);
     const refreshToken = generateRefreshToken(result.user);
 
+    // Set HttpOnly cookies for frontend security
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: (config.auth.jwtExpiresInSeconds || 86400) * 1000,
+    };
+
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     logger.info(messages.success.authLoginSuccess || 'User authenticated', {
       userId: result.user.id, email: result.user.email,
       provider, requestId: req.requestId,
@@ -364,6 +378,8 @@ router.post('/refresh', async (req, res) => {
 
 // ── POST /auth/logout (Protected) ────────────────────────────────────────────
 router.post('/logout', authenticate, (req, res) => {
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
   logger.info(messages.success.authLogoutSuccess || 'User logged out', {
     userId: req.user.userId, requestId: req.requestId,
   });

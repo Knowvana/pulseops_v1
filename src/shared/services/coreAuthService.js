@@ -7,10 +7,10 @@
 //
 // ARCHITECTURE:
 //   1. login() → POST /api/auth/login → API validates via active provider
-//   2. API returns JWT { accessToken, refreshToken, user }
-//   3. Token stored in localStorage + immediately set on ApiClient (Bearer)
-//   4. On page reload, getCurrentUser() restores token from localStorage
-//   5. logout() clears localStorage + ApiClient token
+//   2. API returns JWT { accessToken, refreshToken, user } + sets HttpOnly cookies
+//   3. User metadata stored in localStorage (NO tokens — XSS protection)
+//   4. On page reload, getCurrentUser() restores user from localStorage
+//   5. logout() clears localStorage + notifies API to clear cookies
 //
 // BOOTSTRAP (no database):
 //   - auth-provider.json defaults to 'json_file'
@@ -52,9 +52,9 @@ const CoreAuthService = {
     const response = await ApiClient.post(urls.authLogin, { email, password });
 
     if (response?.success && response?.data) {
-      const { user, accessToken, refreshToken, expiresIn } = response.data;
-      ApiClient.setToken(accessToken);
-      this._storeSession(user, accessToken, refreshToken, expiresIn);
+      const { user, expiresIn } = response.data;
+      // Backend sets HttpOnly cookies — we only store user metadata
+      this._storeSession(user, expiresIn);
       return user;
     }
 
@@ -64,38 +64,38 @@ const CoreAuthService = {
 
   /**
    * Restore session from localStorage on page reload.
-   * Reattaches the stored Bearer token to ApiClient without an API call.
+   * HttpOnly cookies are automatically sent with requests — no token needed.
    * @returns {Promise<Object|null>} User object or null
    */
   async getCurrentUser() {
     const session = this._getStoredSession();
     if (!session) return null;
-
-    const { default: ApiClient } = await import('@shared/services/apiClient');
-    if (session.accessToken) {
-      ApiClient.setToken(session.accessToken);
-    }
+    // HttpOnly cookie is sent automatically via credentials: 'include'
     return session.user;
   },
 
   /**
-   * Log out — clears localStorage session and ApiClient token.
-   * Notifies the API (fire-and-forget).
+   * Log out — clears localStorage session and notifies API to clear cookies.
    */
   logout() {
     localStorage.removeItem(sessionKey);
     import('@shared/services/apiClient').then(({ default: ApiClient }) => {
-      ApiClient.clearToken();
+      // Notify backend to clear HttpOnly cookies
       ApiClient.post(urls.authLogout).catch(() => {});
     }).catch(() => {});
   },
 
   /**
-   * Store session data in localStorage.
+   * Store ONLY non-sensitive user metadata in localStorage.
+   * Tokens are stored in HttpOnly cookies by the backend (XSS protection).
    */
-  _storeSession(user, accessToken, refreshToken, expiresIn) {
+  _storeSession(user, expiresIn) {
     const expiresAt = new Date(Date.now() + (expiresIn || 86400) * 1000).toISOString();
-    const session = { user, accessToken, refreshToken, expiresAt, timestamp: new Date().toISOString() };
+    const session = {
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      expiresAt,
+      timestamp: new Date().toISOString()
+    };
     localStorage.setItem(sessionKey, JSON.stringify(session));
   },
 

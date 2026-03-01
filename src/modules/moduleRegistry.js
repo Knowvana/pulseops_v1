@@ -125,8 +125,9 @@ export async function loadModuleManifest(moduleId) {
         registerDynamicManifest(manifest);
         return manifest;
       }
-    } catch {
-      // Registered path failed — continue to hot-drop URL
+    } catch (err) {
+      console.warn(`[ModuleRegistry] Failed to load registered manifest for '${moduleId}':`, err);
+      // Continue to hot-drop URL
     }
   }
 
@@ -141,8 +142,9 @@ export async function loadModuleManifest(moduleId) {
       registerDynamicManifest(manifest);
       return manifest;
     }
-  } catch {
-    // Hot-drop URL not available — try dev fallback
+  } catch (err) {
+    console.warn(`[ModuleRegistry] Failed to load hot-drop manifest for '${moduleId}' from API:`, err);
+    // Try dev fallback
   }
 
   // Dev fallback: try bundled @modules/ paths (only works in dev with Vite)

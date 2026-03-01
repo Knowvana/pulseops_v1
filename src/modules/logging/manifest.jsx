@@ -59,10 +59,10 @@ const loggingManifest = {
 
   // ── View renderer ───────────────────────────────────────────────────────
   getViews: () => ({
-    dashboard: <LoggingDashboard />,
-    systemLogs: <PlaceholderView title={uiText.systemLogs.pageTitle} subtitle={uiText.systemLogs.subtitle} icon={Activity} />,
-    apiLogs: <PlaceholderView title={uiText.apiLogs.pageTitle} subtitle={uiText.apiLogs.subtitle} icon={Globe} />,
-    query: <PlaceholderView title={uiText.query.pageTitle} subtitle={uiText.query.subtitle} icon={Search} />,
+    dashboard: LoggingDashboard,
+    systemLogs: () => <PlaceholderView title={uiText.systemLogs.pageTitle} subtitle={uiText.systemLogs.subtitle} icon={Activity} />,
+    apiLogs: () => <PlaceholderView title={uiText.apiLogs.pageTitle} subtitle={uiText.apiLogs.subtitle} icon={Globe} />,
+    query: () => <PlaceholderView title={uiText.query.pageTitle} subtitle={uiText.query.subtitle} icon={Search} />,
   }),
 
   // ── Config tabs (rendered when activeView === 'config') ─────────────────

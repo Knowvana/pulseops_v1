@@ -27,16 +27,32 @@
 //   - @shared/config/app.json → App name
 // ============================================================================
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useParams, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell, SettingsConfig, Logger, ModuleService, ApiClient } from '@shared';
 import { getAllManifests, getManifestById, loadModuleManifests } from '@modules/moduleRegistry';
 import appConfig from '@shared/config/app.json';
 import logMessages from '@shared/config/logMessages.json';
 
-export default function PlatformDashboard({ user, onLogout }) {
-  // ── State ─────────────────────────────────────────────────────────────────
+// Wrapper component to handle routing
+function PlatformDashboardRouter({ user, onLogout }) {
+  return (
+    <Routes>
+      <Route path="/:moduleId/:viewId" element={<PlatformDashboard user={user} onLogout={onLogout} />} />
+      <Route path="/:moduleId" element={<PlatformDashboard user={user} onLogout={onLogout} />} />
+      <Route path="/" element={<PlatformDashboard user={user} onLogout={onLogout} />} />
+    </Routes>
+  );
+}
+
+function PlatformDashboard({ user, onLogout }) {
+  // ── Routing ─────────────────────────────────────────────────────────────────────
+  const navigate = useNavigate();
+  const { moduleId: urlModuleId, viewId: urlViewId } = useParams();
+
+  // ── State ─────────────────────────────────────────────────────────────────────
   const [dbModules, setDbModules] = useState([]);
-  const [activeModuleId, setActiveModuleId] = useState(null);
-  const [activeView, setActiveView] = useState(null);
+  const [activeModuleId, setActiveModuleId] = useState(urlModuleId || null);
+  const [activeView, setActiveView] = useState(urlViewId || null);
   const [modulesLoading, setModulesLoading] = useState(true);
 
   // ── Fetch modules from database + dynamically load enabled manifests ──────
@@ -99,15 +115,25 @@ export default function PlatformDashboard({ user, onLogout }) {
       .sort((a, b) => (a.order || 99) - (b.order || 99));
   }, [dbModules, user?.role, modulesLoading]);
 
-  // ── Auto-select first module on load ──────────────────────────────────────
+  // ── Sync URL params with state ───────────────────────────────────────────────────
   useEffect(() => {
-    if (availableModules.length > 0 && !activeModuleId) {
-      const first = availableModules[0];
-      setActiveModuleId(first.id);
-      const manifest = getManifestById(first.id);
-      setActiveView(manifest?.defaultView || 'dashboard');
+    if (urlModuleId && urlModuleId !== activeModuleId) {
+      setActiveModuleId(urlModuleId);
     }
-  }, [availableModules, activeModuleId]);
+    if (urlViewId && urlViewId !== activeView) {
+      setActiveView(urlViewId);
+    }
+  }, [urlModuleId, urlViewId]);
+
+  // ── Auto-select first module on load if no URL params ────────────────────────────
+  useEffect(() => {
+    if (availableModules.length > 0 && !activeModuleId && !urlModuleId) {
+      const first = availableModules[0];
+      const manifest = getManifestById(first.id);
+      const defaultView = manifest?.defaultView || 'dashboard';
+      navigate(`/${first.id}/${defaultView}`, { replace: true });
+    }
+  }, [availableModules, activeModuleId, urlModuleId, navigate]);
 
   // ── Active manifest lookup ────────────────────────────────────────────────
   const activeManifest = activeModuleId ? getManifestById(activeModuleId) : null;
@@ -121,18 +147,20 @@ export default function PlatformDashboard({ user, onLogout }) {
     }));
   }, [activeManifest]);
 
-  // ── Module switching ──────────────────────────────────────────────────────
+  // ── Module switching ────────────────────────────────────────────────────────────────
   const handleSwitchModule = useCallback((moduleId) => {
-    setActiveModuleId(moduleId);
     const manifest = getManifestById(moduleId);
-    setActiveView(manifest?.defaultView || 'dashboard');
+    const defaultView = manifest?.defaultView || 'dashboard';
+    navigate(`/${moduleId}/${defaultView}`);
     Logger.debug('PlatformDashboard', logMessages.modules.manifestLoaded, { moduleId });
-  }, []);
+  }, [navigate]);
 
-  // ── SideNav item selection ────────────────────────────────────────────────
+  // ── SideNav item selection ────────────────────────────────────────────────────────────────
   const handleSideNavSelect = useCallback((viewId) => {
-    setActiveView(viewId);
-  }, []);
+    if (activeModuleId) {
+      navigate(`/${activeModuleId}/${viewId}`);
+    }
+  }, [activeModuleId, navigate]);
 
   // ── Render tabbed views (settings/config) using shared SettingsConfig ─────
   const renderTabsView = useCallback((getTabsFn, title, subtitle, icon, defaultTab) => {
@@ -175,14 +203,15 @@ export default function PlatformDashboard({ user, onLogout }) {
       );
     }
 
-    // Regular views from manifest.getViews()
+    // Regular views from manifest.getViews() - now returns component references
     if (activeManifest.getViews) {
-      const views = activeManifest.getViews({
-        user,
-        onNavigate: handleSideNavSelect,
-        fetchModules,
-      });
-      return views[activeView] || views[activeManifest.defaultView] || null;
+      const views = activeManifest.getViews();
+      const ViewComponent = views[activeView] || views[activeManifest.defaultView];
+      
+      if (!ViewComponent) return null;
+      
+      // Render component reference as JSX, passing necessary props
+      return <ViewComponent user={user} onNavigate={handleSideNavSelect} onModulesChanged={fetchModules} />;
     }
 
     return null;
@@ -212,3 +241,5 @@ export default function PlatformDashboard({ user, onLogout }) {
     </AppShell>
   );
 }
+
+export default PlatformDashboardRouter;

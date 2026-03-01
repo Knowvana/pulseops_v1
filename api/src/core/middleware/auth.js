@@ -97,21 +97,29 @@ export async function comparePassword(password, hash) {
 // ── Authentication Middleware ─────────────────────────────────────────────────
 
 /**
- * Express middleware: Authenticate requests via Bearer JWT token.
+ * Express middleware: Authenticate requests via Dual Auth (Bearer Header or HttpOnly Cookie).
  * Attaches decoded user to req.user on success.
  * Returns 401 if token is missing, invalid, or expired.
  */
 export function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization;
+  let token = null;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: { message: messages.errors.authTokenMissing || 'Authentication required. Provide a Bearer token.' },
-    });
+  // 1. Check Authorization Header (Bearer) - For Swagger/Postman
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } 
+  // 2. Fallback to HttpOnly Cookie - For Frontend
+  else if (req.cookies && req.cookies.accessToken) {
+    token = req.cookies.accessToken;
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: { message: messages.errors.authTokenMissing || 'Authentication required. Provide a Bearer token or cookie.' },
+    });
+  }
 
   try {
     const decoded = verifyAccessToken(token);

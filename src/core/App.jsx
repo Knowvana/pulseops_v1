@@ -25,6 +25,7 @@
 //   - @shared/config/logMessages.json → Log templates
 // ============================================================================
 import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { LoginForm, LoadingSpinner, CoreAuthService, Logger, ApiClient } from '@shared';
 import PlatformDashboard from '@core/PlatformDashboard';
 import constants from '@shared/config/constants.json';
@@ -107,6 +108,10 @@ export default function App() {
     return <LoginForm onLogin={handleLogin} isLoading={isLoggingIn} />;
   }
 
-  // ── Authenticated → show platform ─────────────────────────────────────────
-  return <PlatformDashboard user={user} onLogout={handleLogout} />;
+  // ── Authenticated → show platform with routing ────────────────────────────
+  return (
+    <BrowserRouter>
+      <PlatformDashboard user={user} onLogout={handleLogout} />
+    </BrowserRouter>
+  );
 }

@@ -63,11 +63,11 @@ const adminManifest = {
     { id: 'config', label: navTxt.settings, icon: SettingsIcon },
   ],
 
-  // ── View renderer — returns { viewId: ReactElement } map ────────────────
-  getViews: ({ user, onNavigate, fetchModules }) => ({
-    dashboard: <AdminDashboard user={user} onNavigate={onNavigate} />,
-    moduleManager: <AdminModuleManager onModulesChanged={fetchModules} />,
-    users: <UsersPlaceholder />,
+  // ── View renderer — returns { viewId: Component } map ────────────────
+  getViews: () => ({
+    dashboard: AdminDashboard,
+    moduleManager: AdminModuleManager,
+    users: UsersPlaceholder,
   }),
 
   // ── Settings tabs (rendered when activeView === 'config') ───────────────

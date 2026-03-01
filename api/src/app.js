@@ -28,6 +28,7 @@
 // ============================================================================
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import config from './config/index.js';
 import logger from './shared/logger.js';
@@ -66,7 +67,11 @@ export default function createApp() {
   // ── Security Middleware ─────────────────────────────────────────────────
   app.use(helmetMiddleware);
   app.use(requestIdMiddleware);
-  app.use(cors(config.cors));
+  app.use(cookieParser());
+  app.use(cors({
+    ...config.cors,
+    credentials: true,
+  }));
   app.use(generalRateLimiter);
   app.use(express.json({ limit: '10mb' }));
   app.use(inputSanitizer);

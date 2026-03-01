@@ -36,8 +36,6 @@ class ApiClientService {
     this._logger = null;
     // Current user reference for log context
     this._user = null;
-    // JWT access token — attached as Bearer to all requests
-    this._accessToken = null;
     // When true, 401 responses will NOT dispatch session-expired event.
     this._suppressSessionExpired = false;
   }
@@ -45,8 +43,9 @@ class ApiClientService {
   // ── Logger injection (avoids circular import) ─────────────────────
   setLogger(logger) { this._logger = logger; }
   setUser(user) { this._user = user; }
-  setToken(token) { this._accessToken = token || null; }
-  clearToken() { this._accessToken = null; }
+  // Token methods kept for backward compatibility but are no-ops (using HttpOnly cookies)
+  setToken(token) { /* No-op: using HttpOnly cookies */ }
+  clearToken() { /* No-op: using HttpOnly cookies */ }
   suppressSessionExpired(flag) { this._suppressSessionExpired = !!flag; }
 
   // ── URL helpers ───────────────────────────────────────────────────────────
@@ -54,12 +53,9 @@ class ApiClientService {
   setBaseUrl(url) { this._baseUrl = url; }
 
   // ── Header builder ─────────────────────────────────────────
-  // Attaches Bearer token if available (set after login by CoreAuthService).
+  // HttpOnly cookies are sent automatically via credentials: 'include'
   _buildHeaders(customHeaders = {}) {
     const headers = { 'Content-Type': 'application/json', ...customHeaders };
-    if (this._accessToken) {
-      headers['Authorization'] = `Bearer ${this._accessToken}`;
-    }
     return headers;
   }
 

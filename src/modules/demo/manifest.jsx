@@ -56,8 +56,8 @@ const demoManifest = {
 
   // ── View renderer ───────────────────────────────────────────────────────
   getViews: () => ({
-    dashboard: <DemoDashboard />,
-    items: <DemoItemsPlaceholder />,
+    dashboard: DemoDashboard,
+    items: DemoItemsPlaceholder,
   }),
 
   // ── Config tabs (rendered when activeView === 'config') ─────────────────
