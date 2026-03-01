@@ -259,12 +259,18 @@ const DatabaseService = {
         ON CONFLICT (email) DO NOTHING
       `, ['admin@test.com', 'Core Admin', 'super_admin', 'active']);
 
-      // Register core module
+      // Register core modules
       await client.query(`
         INSERT INTO ${schema}.system_modules (module_id, name, version, description, is_core, enabled, schema_initialized, "order")
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (module_id) DO NOTHING
       `, ['platform_admin', 'Admin', '1.0.0', 'Platform dashboard, module management, and global settings', true, true, true, 0]);
+
+      await client.query(`
+        INSERT INTO ${schema}.system_modules (module_id, name, version, description, is_core, enabled, schema_initialized, "order")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (module_id) DO NOTHING
+      `, ['auth', 'Authentication', '1.0.0', 'Global authentication, authorization, user management, RBAC, session control, and security audit', true, true, true, 1]);
 
       await client.query('COMMIT');
       logger.info(messages.success.defaultDataLoaded);
