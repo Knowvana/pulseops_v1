@@ -1,0 +1,11 @@
+{
+  "moduleId": "_template",
+  "moduleName": "Template Module",
+  "moduleShortName": "Template",
+  "moduleVersion": "1.0.0",
+  "moduleDescription": "A reusable boilerplate template for creating new PulseOps V1 modules.",
+  "roles": ["super_admin", "admin", "user"],
+  "isCore": false,
+  "order": 100,
+  "defaultView": "dashboard"
+}

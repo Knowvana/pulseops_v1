@@ -1,0 +1,29 @@
+{
+  "dashboard": {
+    "title": "Module Dashboard",
+    "subtitle": "Overview of your module activities and metrics."
+  },
+  "reports": {
+    "title": "Module Reports",
+    "subtitle": "Detailed analytics and reporting views."
+  },
+  "config": {
+    "title": "Module Configuration",
+    "subtitle": "Manage settings and preferences for this module.",
+    "tabs": {
+      "general": {
+        "label": "General Preferences",
+        "description": "Configure basic module behavior and display options."
+      },
+      "advanced": {
+        "label": "Advanced Settings",
+        "description": "Fine-tune performance and security parameters."
+      }
+    }
+  },
+  "common": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "loading": "Loading module data..."
+  }
+}

@@ -90,21 +90,27 @@ const mod = await import(/* @vite-ignore */ hotDropUrl);
 - **URLs:** `src/shared/config/urls.json` (imported as `import urls from '@shared/config/urls.json'`).
 - **Module Metadata:** `src/modules/<id>/constants.json` (imported as `import moduleConstants from '@modules/<id>/constants.json'`).
 
-### 1.5 Module Manifest Contract (STRICT)
+### 1.5 Module Manifest Contract & Base Navigation (STRICT)
 
-Every module MUST export a manifest object with these fields:
+Every module MUST export a manifest object. To maintain a consistent enterprise UI, **every module MUST implement three base navigation views**.
 
-**REQUIRED:**
+**REQUIRED Nav Items (Base 3):**
+The `navItems` array MUST include these three core IDs in this exact order. Modules may append custom items *after* these three:
+1. `dashboard` — The main landing view and high-level metrics.
+2. `config` — The configuration view (MUST use the tabbed layout, see Rule 3.5).
+3. `reports` — The reporting and data export view.
+
+**REQUIRED Manifest Fields:**
 - `id` — Unique module identifier (e.g., `'auth'`, `'logging'`).
 - `name` — Display name for UI (e.g., `'Authentication'`).
 - `version` — Semantic version string (e.g., `'1.0.0'`).
 - `description` — Human-readable description.
 - `icon` — Lucide React icon component.
 - `defaultView` — Default view ID to show on module load (e.g., `'dashboard'`).
-- `navItems` — Array of `{ id, label, icon }` for the left sidebar. MUST include `'dashboard'` and `'config'`.
+- `navItems` — Array of `{ id, label, icon }` for the left sidebar. (MUST include `dashboard`, `config`, `reports`).
 - `getViews()` — Function returning `{ viewId: ComponentReference }` map (NOT JSX elements).
 
-**OPTIONAL:**
+**OPTIONAL Manifest Fields:**
 - `roles` — Array of allowed roles (e.g., `['super_admin', 'admin']`).
 - `order` — Sort order in top navigation (lower = left).
 - `isCore` — Boolean; `true` for core modules (cannot be disabled).
@@ -409,6 +415,60 @@ function PlatformDashboard({ user, onLogout }) {
   );
 }
 ```
+
+### 3.5 Module Configuration View Standardization (MANDATORY)
+
+To ensure a consistent user experience across the platform, the required `config` view in every module MUST utilize a standardized tabbed layout.
+
+**Implementation:**
+- The view mapped to the `config` ID must render a reusable component (e.g., the `@shared` `<SettingsConfig />` component).
+- Layout: It MUST feature vertical tabs on the left and dynamic content on the right.
+- Customization: The module developer defines the number of tabs, the tab labels, icons, and content.
+
+**Example Implementation:**
+```javascript
+// In TemplateConfig.jsx
+import { SettingsConfig } from '@shared';
+import { Settings, Shield } from 'lucide-react';
+
+export default function TemplateConfig() {
+  const configTabs = [
+    {
+      id: 'general',
+      label: 'General Preferences',
+      icon: Settings,
+      content: <div>General settings form...</div>
+    },
+    {
+      id: 'advanced',
+      label: 'Advanced Settings',
+      icon: Shield,
+      content: <div>Advanced settings form...</div>
+    }
+  ];
+
+  return (
+    <SettingsConfig
+      title="Module Configuration"
+      subtitle="Manage settings for this module"
+      icon={Settings}
+      tabs={configTabs}
+    />
+  );
+}
+```
+
+**Tab Structure:**
+Each tab object MUST include:
+- `id` — Unique tab identifier (e.g., `'general'`, `'advanced'`).
+- `label` — Display label for the tab (e.g., `'General Preferences'`).
+- `icon` — Lucide React icon component.
+- `content` — React component or JSX element to render when tab is active.
+
+**Consistency Mandate:**
+- All modules MUST use the same `SettingsConfig` component or equivalent vertical-tab layout.
+- Tab ordering MUST be consistent across modules (e.g., "General" first, "Advanced" second).
+- Icons MUST be from the Lucide React library for visual consistency.
 
 ---
 

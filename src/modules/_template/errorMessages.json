@@ -1,0 +1,5 @@
+{
+  "loadFailed": "Failed to load module template data.",
+  "saveFailed": "Failed to save configuration changes.",
+  "unauthorized": "You do not have permission to access this module view."
+}
